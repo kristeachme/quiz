@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Парящий квиз — КГБ</title>
+<style>
+  :root{ --ui:#ffd700; --ui-soft:rgba(255,215,0,.14); --glow:#00f0ff; }
+  html,body{height:100%}
+  body{ margin:0; background:transparent; color:#fff; overflow:hidden;
+        font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
+  #game{position:relative; width:100%; height:100%; overflow:hidden}
+  .hud{ position:fixed; left:12px; right:12px; top:12px; display:flex; gap:12px;
+        align-items:center; justify-content:space-between; z-index:10; pointer-events:none; }
+  .badge{ background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.12); border-radius:12px;
+          padding:10px 14px; box-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 18px var(--ui-soft) inset; pointer-events:auto;}
+  .question{ font-weight:900; color:var(--ui); text-shadow:0 0 18px var(--ui-soft)}
+  .score{ font-weight:800; min-width:100px; text-align:center}
+  .overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; z-index:20;}
+  .panel{ background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:22px 26px;
+          box-shadow:0 0 26px var(--ui-soft); text-align:center; min-width:min(92vw,560px)}
+  .panel h2{margin:6px 0 6px; font-size:24px; color:var(--ui)}
+  .panel button{ background:linear-gradient(90deg,#ffbf00,#ffd700); color:#000; border:0; border-radius:10px; font-weight:900; padding:12px 16px; cursor:pointer; margin-top:10px;}
+  .item{ position:absolute; top:-160px; left:0; display:inline-flex; align-items:center; justify-content:center;
+         min-width:140px; min-height:80px; user-select:none; cursor:pointer; transform:translateZ(0);}
+  .item .bg{ position:absolute; inset:0; background:#151515; border-radius:16px; border:1px solid rgba(255,255,255,.12);
+             box-shadow:0 10px 30px rgba(0,0,0,.55); background-position:center !important; background-repeat:no-repeat !important; background-size:contain !important;}
+  .item .content{ position:relative; z-index:1; padding:20px 24px; text-align:center; line-height:1.15; max-width:520px}
+  .item .content span{ font-weight:800; font-size:22px; white-space:nowrap}
+  .caught{animation:pop .45s ease forwards}
+  @keyframes pop{0%{transform:scale(1);opacity:1}50%{transform:scale(1.12)}100%{transform:scale(.85);opacity:0}}
+  .score-float{ position:fixed; z-index:30; font-weight:900; color:var(--ui);
+                text-shadow:0 0 10px rgba(255,255,255,.5), 0 0 20px var(--ui-soft);
+                animation:floatUp .85s ease-out forwards; pointer-events:none;}
+  @keyframes floatUp{0%{transform:translate(-50%,-10px);opacity:0}10%{opacity:1}100%{transform:translate(-50%,-60px);opacity:0}}
+</style>
+</head>
+<body>
+  <div class="hud">
+    <div class="badge question" id="hudQ">Парящий квиз</div>
+    <div class="badge score" id="hudScore">0/0</div>
+  </div>
+  <div id="game" aria-live="polite"></div>
+
+  <audio id="popSound" src="pop.mp3" preload="auto"></audio>
+  <audio id="winSound" src="win.mp3" preload="auto"></audio>
+
+<script>
+const params = new URLSearchParams(location.search);
+const GAME_ID = params.get('id');
+
+// База к JSON в этой же папке репозитория: <repo-path>/data/
+const JSON_BASE = (function(){
+  const dir = location.origin + location.pathname.replace(/[^\/]+$/,''); // каталог, где лежит quiz-main.html
+  return dir + 'data/'; // /data рядом
+})();
+
+let CFG=null;
+let running=false, spawner=null, qIndex=-1, answered=0;
+
+const game = document.getElementById('game');
+const hudQ = document.getElementById('hudQ');
+const hudScore = document.getElementById('hudScore');
+const popSound = document.getElementById('popSound');
+const winSound = document.getElementById('winSound');
+const $ = s=>document.querySelector(s);
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function fatal(msg){
+  const o=document.createElement('div'); o.className='overlay';
+  o.innerHTML=`<div class="panel"><h2>Ошибка</h2><p style="white-space:pre-wrap">${msg}</p></div>`;
+  document.body.appendChild(o);
+}
+
+(async function boot(){
+  if(!GAME_ID){ fatal("Не передан ?id"); return; }
+  try{
+    const url = `${JSON_BASE}${encodeURIComponent(GAME_ID)}.json?v=${Date.now()}`;
+    const res = await fetch(url, {cache:'no-store'}); if(!res.ok) throw new Error('HTTP '+res.status);
+    CFG = await res.json();
+  }catch(e){ fatal("Не удалось загрузить конфиг: "+e.message); return; }
+  startOverlay();
+})();
+
+function startOverlay(){
+  const ov=document.createElement('div'); ov.className='overlay';
+  ov.innerHTML=`<div class="panel">
+    <h2>Парящий квиз — КГБ</h2>
+    <p style="opacity:.9">Кликни по правильному варианту. Неправильные исчезают.</p>
+    <button id="startBtn">Начать</button>
+  </div>`;
+  document.body.appendChild(ov);
+  $('#startBtn').addEventListener('click',()=>{ ov.remove(); start(); },{once:true});
+}
+
+function start(){
+  answered=0; qIndex=-1;
+  hudScore.textContent = `0/${(CFG.questions||[]).length}`;
+  nextQuestion();
+}
+
+function nextQuestion(){
+  qIndex++;
+  clearInterval(spawner);
+  document.querySelectorAll('.item').forEach(n=>n.remove());
+
+  const Q = CFG.questions||[];
+  if(qIndex>=Q.length){ return finish(); }
+
+  const q = Q[qIndex];
+  hudQ.textContent = q.question || `Вопрос ${qIndex+1}`;
+
+  running=true;
+  const need = Math.max(2, Math.min(10, Number(CFG.answersPerQuestion||4)));
+  const poolWrong = (q.wrong && q.wrong.length ? q.wrong : (CFG.globalWrong||[])).slice();
+  shuffle(poolWrong);
+  const chosenWrong = poolWrong.slice(0, Math.max(1, need-1));
+
+  const OPTIONS = shuffle([{val:q.correct, good:true}, ...chosenWrong.map(w=>({val:w, good:false}))]);
+
+  let idx=0;
+  const interval = Math.max(350, Number(CFG.spawnInterval||900));
+  spawner = setInterval(()=>{
+    if(!running) return;
+    drop(OPTIONS[idx], Number(CFG.speedFall||2.2));
+    idx = (idx+1) % OPTIONS.length;
+  }, interval);
+}
+
+function finish(){
+  running=false;
+  try{ winSound.currentTime=0; winSound.play(); }catch(_){}
+  const ov=document.createElement('div'); ov.className='overlay';
+  ov.innerHTML=`<div class="panel">
+    <h2>Квиз пройден!</h2>
+    <p style="opacity:.9">Верных ответов: <b>${answered}</b> из <b>${(CFG.questions||[]).length}</b></p>
+    <button id="restartBtn">Играть снова</button>
+  </div>`;
+  document.body.appendChild(ov);
+  $('#restartBtn').addEventListener('click',()=>{ ov.remove(); start(); },{once:true});
+}
+
+function drop(opt, speed){
+  const el=document.createElement('div'); el.className='item'; el.dataset.good=opt.good?'1':'0';
+  const bg=document.createElement('div'); bg.className='bg';
+  const content=document.createElement('div'); content.className='content';
+
+  if(/^https?:\/\//i.test(opt.val)){
+    bg.style.background='#000';
+    const img=document.createElement('img'); img.src=opt.val; img.alt='option';
+    img.style.maxWidth='220px'; img.style.maxHeight='150px';
+    content.appendChild(img);
+  } else {
+    const span=document.createElement('span'); span.textContent=String(opt.val); span.style.color='#fff';
+    content.appendChild(span);
+  }
+  el.appendChild(bg); el.appendChild(content);
+
+  const gw=game.clientWidth; const startX=Math.max(16, Math.min(gw-260, rnd(0, gw-260)));
+  el.style.left = startX+'px'; el.style.top='-160px';
+  game.appendChild(el);
+
+  requestAnimationFrame(()=>{
+    fit(el); fall(el, speed);
+    el.addEventListener('click', ()=>{
+      if(el.dataset.dead==='1') return;
+      if(el.dataset.good==='1'){
+        answered++; hudScore.textContent=`${answered}/${(CFG.questions||[]).length}`;
+        pop(el,'+1');
+        running=false; clearInterval(spawner);
+        document.querySelectorAll('.item').forEach(n=>n.remove());
+        setTimeout(nextQuestion, 350);
+      } else {
+        el.dataset.dead='1'; el.classList.add('caught'); setTimeout(()=>el.remove(), 350);
+      }
+    });
+  });
+}
+
+function fit(el){
+  const c=el.querySelector('.content'); el.style.width=''; el.style.height='';
+  const r=c.getBoundingClientRect(); const padX=26, padY=20;
+  el.style.width=Math.ceil(r.width+padX*2)+'px';
+  el.style.height=Math.ceil(r.height+padY*2)+'px';
+}
+
+function fall(el, speed){
+  let y=-160, t=0; const swayAmp=rnd(6,22), swayFreq=rnd(0.003,0.008);
+  const v = Number(speed||2.2);
+  (function step(){
+    if(el.dataset.dead==='1') return;
+    y += v; t += 1;
+    const dx = Math.sin(t*swayFreq)*swayAmp;
+    el.style.top=y+'px'; el.style.transform=`translateX(${dx}px)`;
+    if(y > game.clientHeight + 220){ el.dataset.dead='1'; el.remove(); return; }
+    requestAnimationFrame(step);
+  })();
+}
+
+function pop(el, text){
+  try{ popSound.currentTime=0; popSound.play(); }catch(_){}
+  const r=el.getBoundingClientRect();
+  const node=document.createElement('div'); node.className='score-float';
+  node.style.left=(r.left+r.width/2)+'px'; node.style.top=(r.top+8)+'px';
+  node.textContent=text; document.body.appendChild(node);
+  setTimeout(()=>node.remove(), 900);
+  el.dataset.dead='1'; el.classList.add('caught'); setTimeout(()=>el.remove(), 350);
+}
+</script>
+</body>
+</html>
