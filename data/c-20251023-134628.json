@@ -1,0 +1,26 @@
+{
+  "answersPerQuestion": 4,
+  "speedFall": 2.2,
+  "spawnInterval": 900,
+  "globalWrong": [],
+  "questions": [
+    {
+      "question": "Cтолица Франции",
+      "correct": "Париж",
+      "wrong": [
+        "Марсель",
+        "Лондон",
+        "Москва"
+      ]
+    },
+    {
+      "question": "Cтолица России",
+      "correct": "Москва",
+      "wrong": [
+        "Марсель",
+        "Лондон",
+        "Париж"
+      ]
+    }
+  ]
+}
