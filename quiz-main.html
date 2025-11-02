@@ -107,7 +107,10 @@ function startOverlay(){
   const ov=document.createElement('div'); ov.className='overlay';
   ov.innerHTML=`<div class="panel">
     <h2>Парящий квиз — КГБ</h2>
-    <p style="opacity:.9">Кликни по правильному варианту. Неправильные исчезают.</p>
+    <p style="opacity:.9">
+  Кликни по правильному варианту. Неправильные исчезают.
+  <br>Направление: <b>${(CFG.direction==='horizontal'?'слева направо':'сверху вниз')}</b>
+</p>
     <button id="startBtn">Начать</button>
   </div>`;
   document.body.appendChild(ov);
@@ -140,14 +143,14 @@ function nextQuestion(){
   const OPTIONS = shuffle([{val:q.correct, good:true}, ...chosenWrong.map(w=>({val:w, good:false}))]);
 
   let idx=0;
+  const dir = (CFG.direction === 'horizontal') ? 'horizontal' : 'vertical';
   const interval = Math.max(350, Number(CFG.spawnInterval||900));
   spawner = setInterval(()=>{
     if(!running) return;
-    drop(OPTIONS[idx], speedToPxPerFrame(CFG.speed));
+    drop(OPTIONS[idx], speedToPxPerFrame(CFG.speed), dir);
     idx = (idx+1) % OPTIONS.length;
   }, interval);
-}
-
+  
 function finish(){
   running=false;
   try{ winSound.currentTime=0; winSound.play(); }catch(_){}
@@ -161,34 +164,34 @@ function finish(){
   $('#restartBtn').addEventListener('click',()=>{ ov.remove(); start(); },{once:true});
 }
 
-function drop(opt, speedPx){
+function drop(opt, speedPx, direction){
   const el=document.createElement('div'); el.className='item'; el.dataset.good=opt.good?'1':'0';
   const bg=document.createElement('div'); bg.className='bg';
   const content=document.createElement('div'); content.className='content';
-
-  if(/^https?:\/\//i.test(opt.val)){
-    bg.style.background='#000';
-    const img=document.createElement('img'); img.src=opt.val; img.alt='option';
-    img.style.maxWidth='220px'; img.style.maxHeight='150px';
-    content.appendChild(img);
-  } else {
-    const span=document.createElement('span');
-    span.textContent=String(opt.val);
-    span.style.fontFamily = (CFG.font||'system-ui') + ', system-ui, sans-serif';
-    span.style.fontSize   = Math.max(10, Number(CFG.fontSize||24))+'px';
-    span.style.color      = CFG.textColor || '#ffffff';
-    content.appendChild(span);
-  }
+  ...
   el.appendChild(bg); el.appendChild(content);
 
-  const gw=game.clientWidth; const startX=Math.max(16, Math.min(gw-260, rnd(0, gw-260)));
-  el.style.left = startX+'px'; el.style.top='-160px';
-  if(CFG.cursor){ el.style.cursor = `url("${CFG.cursor}") 8 0, pointer`; }
+  const gw=game.clientWidth, gh=game.clientHeight;
 
+  if(direction === 'horizontal'){
+    // стартуем слева, случайная высота
+    const startY = Math.max(16, Math.min(gh-200, rnd(0, gh-200)));
+    el.style.top = startY+'px';
+    el.style.left = '-260px';
+  }else{
+    // по-умолчанию — сверху вниз
+    const startX = Math.max(16, Math.min(gw-260, rnd(0, gw-260)));
+    el.style.left = startX+'px';
+    el.style.top  = '-160px';
+  }
+
+  if(CFG.cursor){ el.style.cursor = `url("${CFG.cursor}") 8 0, pointer`; }
   game.appendChild(el);
 
   requestAnimationFrame(()=>{
-    fit(el); fall(el, speedPx);
+    fit(el);
+    if(direction === 'horizontal') fallH(el, speedPx);
+    else fallV(el, speedPx);
     el.addEventListener('click', ()=>{
       if(el.dataset.dead==='1') return;
       if(el.dataset.good==='1'){
@@ -204,14 +207,7 @@ function drop(opt, speedPx){
   });
 }
 
-function fit(el){
-  const c=el.querySelector('.content'); el.style.width=''; el.style.height='';
-  const r=c.getBoundingClientRect(); const padX=26, padY=20;
-  el.style.width=Math.ceil(r.width+padX*2)+'px';
-  el.style.height=Math.ceil(r.height+padY*2)+'px';
-}
-
-function fall(el, v){
+function fallV(el, v){ // сверху вниз
   let y=-160, t=0; const swayAmp=rnd(6,22), swayFreq=rnd(0.003,0.008);
   (function step(){
     if(el.dataset.dead==='1') return;
@@ -219,6 +215,18 @@ function fall(el, v){
     const dx = Math.sin(t*swayFreq)*swayAmp;
     el.style.top=y+'px'; el.style.transform=`translateX(${dx}px)`;
     if(y > game.clientHeight + 220){ el.dataset.dead='1'; el.remove(); return; }
+    requestAnimationFrame(step);
+  })();
+}
+
+function fallH(el, v){ // слева направо
+  let x=-260, t=0; const swayAmp=rnd(6,22), swayFreq=rnd(0.003,0.008);
+  (function step(){
+    if(el.dataset.dead==='1') return;
+    x += v; t += 1;
+    const dy = Math.sin(t*swayFreq)*swayAmp;
+    el.style.left=x+'px'; el.style.transform=`translateY(${dy}px)`;
+    if(x > game.clientWidth + 260){ el.dataset.dead='1'; el.remove(); return; }
     requestAnimationFrame(step);
   })();
 }
