@@ -299,11 +299,32 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
 
   <section class="card">
     <h2>❓ Вопросы</h2>
-    <div id="levels" class="levels"></div>
-    <div class="toolbar">
-      <button id="addQ">➕ Добавить вопрос</button>
-      <span class="pill">Неограниченно вопросов</span>
+    <div id="levels">
+  <div class="qcard">
+    <div class="qhead">
+      <div class="qtitle">Вопрос</div>
+      <div class="qindex">1</div>
+      <div class="qactions">
+        <button class="qbtn">▲</button>
+        <button class="qbtn">▼</button>
+        <button class="qbtn danger">Удалить</button>
+      </div>
     </div>
+
+    <div class="qgrid">
+      <label class="full">Текст вопроса (вверху)</label>
+      <input type="text" class="full" placeholder="Например: Столица Франции?">
+
+      <label>Правильный ответ (текст или URL)</label>
+      <input type="text" placeholder="Париж или https://.../cat.gif">
+
+      <label>Неправильные (по одному в строке)</label>
+      <textarea>Марсель
+Лион
+Ницца</textarea>
+    </div>
+  </div>
+</div>
 
     <h2 style="margin-top:16px">🚀 Публикация</h2>
     <div class="row">
