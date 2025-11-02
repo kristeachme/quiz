@@ -15,7 +15,7 @@
     .card{ background:var(--card); border:1px solid var(--stroke); border-radius:14px; padding:18px; box-shadow:0 0 28px rgba(255,215,0,.06);}
     .card h2{ margin:0 0 14px; font-size:18px; color:var(--ui-acc); display:flex; align-items:center; gap:10px}
     label{ display:block; margin:12px 0 8px; font-size:15px; color:#fff; font-weight:600}
-    input[type="text"], input[type="number"], input[type="url"], textarea, select{
+    input[type="text"], input[type="number"], input[type="url"], input[type="color"], textarea, select{
       width:100%; background:#101010; color:#fff; border:1px solid #3a3a3a; border-radius:10px; padding:12px 14px; font-size:16px;
       outline:none; transition:border-color .15s ease, box-shadow .15s ease;
     }
@@ -104,7 +104,7 @@
       </div>
 
       <div class="card" style="margin-top:16px">
-        <h2>🧪 Предпросмотр</h2>
+        <h2>💻 Предпросмотр</h2>
         <div class="preview-controls">
           <input type="text" id="previewValue" placeholder="Текст предпросмотра или URL картинки..." value="Preview">
           <div>
@@ -134,6 +134,83 @@
         </div>
       </div>
     </section>
+      </div>
+
+      <!-- 🎨 Оформление элементов -->
+      <div class="card" style="margin-top:16px">
+        <h2>🎨 Оформление элементов (для всех уровней)</h2>
+
+        <div class="row">
+          <div>
+            <label>Фигура</label>
+            <select id="shape">
+              <option selected>Прямоугольник</option>
+              <option>Скруглённый</option>
+              <option>Круг</option>
+            </select>
+          </div>
+          <div>
+            <label>Фон — цвет</label>
+            <input type="color" id="bgColor" value="#151515">
+          </div>
+        </div>
+
+        <label>Фон — картинка (URL, необязательно)</label>
+        <input type="url" id="bgImage" placeholder="https://.../bubble.png">
+
+        <div class="row">
+          <div>
+            <label>Рамка (цвет)</label>
+            <input type="color" id="borderColor" value="#ffffff">
+          </div>
+          <div>
+            <label>Рамка (толщина, px)</label>
+            <input type="number" id="borderWidth" value="1" min="0" max="20">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label><input type="checkbox" id="borderOn" checked> Рамка включена?</label>
+          </div>
+          <div>
+            <label><input type="checkbox" id="shadowOn" checked> Тень</label>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label><input type="checkbox" id="glowOn"> Подсветка</label>
+          </div>
+          <div>
+            <label>Цвет подсветки</label>
+            <input type="color" id="glowColor" value="#00ffff">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Прозрачность фона/картинки (0–1)</label>
+            <input type="number" id="alpha" value="1" min="0" max="1" step="0.05">
+          </div>
+          <div>
+            <label><input type="checkbox" id="effect3d"> 3D эффект</label>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Внутренние отступы (px)</label>
+            <input type="number" id="padding" value="22" min="0" max="80">
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Правая колонка -->
+    <section class="card">
+      <h2>❓ Вопросы</h2>
 
     <!-- Правая колонка -->
     <section class="card">
@@ -195,23 +272,95 @@ function applyFontToPreview(){
   text.style.color      = $('#textColor').value;
 }
 
-    function updatePreview(){
-      const item=$('#previewItem'); const text=$('#previewText'); const val=$('#previewValue').value.trim();
-      const asImage = item.dataset.mode==='image' || /^https?:\/\//i.test(val);
-      applyFontToPreview();
-      if(asImage){
-        text.style.display='none';
-        if(!item.querySelector('img')){const img=document.createElement('img'); item.appendChild(img);}
-        const img=item.querySelector('img'); img.src = val || 'https://via.placeholder.com/200x140?text=Image';
-      }else{
-        const img=item.querySelector('img'); if(img) img.remove();
-        text.style.display='block'; text.textContent = val || 'Preview';
-      }
-    }
-    ['font','fontSize','textColor','previewValue'].forEach(id=>{
-      $('#'+id).addEventListener('input', updatePreview);
-      $('#'+id).addEventListener('change', updatePreview);
-    });
+    function hexToRGBA(hex, a){
+  try{
+    const m = hex.replace('#','');
+    const r = parseInt(m.substring(0,2),16);
+    const g = parseInt(m.substring(2,4),16);
+    const b = parseInt(m.substring(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }catch(_){ return `rgba(0,0,0,${a||1})`; }
+}
+
+function updatePreview(){
+  const item=$('#previewItem'); const text=$('#previewText'); const val=$('#previewValue').value.trim();
+  const asImage = item.dataset.mode==='image' || /^https?:\/\//i.test(val);
+
+  applyFontToPreview();
+
+  // содержимое: текст/картинка
+  if(asImage){
+    text.style.display='none';
+    if(!item.querySelector('img')){const img=document.createElement('img'); item.appendChild(img);}
+    const img=item.querySelector('img'); img.src = val || 'https://via.placeholder.com/200x140?text=Image';
+  }else{
+    const img=item.querySelector('img'); if(img) img.remove();
+    text.style.display='block'; text.textContent = val || 'Preview';
+  }
+
+  // стили блока
+  const shape  = $('#shape').value;
+  const bgCol  = $('#bgColor').value;
+  const bgImg  = $('#bgImage').value.trim();
+  const bOn    = $('#borderOn').checked;
+  const bCol   = $('#borderColor').value;
+  const bW     = Math.max(0, parseInt($('#borderWidth').value||'0',10));
+  const shOn   = $('#shadowOn').checked;
+  const glOn   = $('#glowOn').checked;
+  const glCol  = $('#glowColor').value;
+  const alpha  = Math.max(0, Math.min(1, parseFloat($('#alpha').value||'1')));
+  const pad    = Math.max(0, parseInt($('#padding').value||'22',10));
+  const eff3d  = $('#effect3d').checked;
+
+  // форма
+  item.style.borderRadius = (shape==='Прямоугольник') ? '6px'
+                          : (shape==='Скруглённый')   ? '16px'
+                          : '999px'; // круг
+
+  // фон (картинка имеет приоритет)
+  if(bgImg){
+    item.style.backgroundImage    = `url("${bgImg}")`;
+    item.style.backgroundRepeat   = 'no-repeat';
+    item.style.backgroundPosition = 'center';
+    item.style.backgroundSize     = 'cover';
+    item.style.backgroundColor    = 'transparent';
+  }else{
+    item.style.backgroundImage = 'none';
+    item.style.backgroundColor = hexToRGBA(bgCol, 1);
+  }
+
+  // рамка
+  item.style.border = bOn ? `${bW}px solid ${bCol}` : '0 solid transparent';
+
+  // тени/подсветка
+  const baseShadow = shOn ? '0 10px 30px rgba(0,0,0,.5)' : 'none';
+  const glowShadow = glOn ? `, 0 0 18px ${hexToRGBA(glCol, .7)}` : '';
+  item.style.boxShadow = baseShadow + (glOn ? glowShadow : '');
+
+  // прозрачность (на весь элемент)
+  item.style.opacity = String(alpha);
+
+  // внутренние отступы
+  item.style.padding = pad + 'px';
+
+  // «3D-эффект» — лёгкая перспектива/контур
+  if(eff3d){
+    item.style.transform = 'translateZ(0) perspective(600px) rotateX(1.2deg)';
+    item.style.outline   = '1px solid rgba(255,255,255,.06)';
+  }else{
+    item.style.transform = 'none';
+    item.style.outline   = 'none';
+  }
+}
+    ['font','fontSize','textColor','previewValue',
+ 'shape','bgColor','bgImage','borderOn','borderColor','borderWidth',
+ 'shadowOn','glowOn','glowColor','alpha','padding','effect3d'
+].forEach(id=>{
+  const el = $('#'+id);
+  if(!el) return;
+  el.addEventListener('input',  updatePreview);
+  el.addEventListener('change', updatePreview);
+});
     $('#btnText').addEventListener('click', e=>{e.preventDefault(); $('#previewItem').dataset.mode='text'; updatePreview();});
     $('#btnImage').addEventListener('click', e=>{e.preventDefault(); $('#previewItem').dataset.mode='image'; updatePreview();});
     updatePreview();
@@ -258,16 +407,34 @@ function applyFontToPreview(){
         });
       });
       return {
-        language: $('#language').value,
-        font: $('#font').value.trim(),
-        fontSize: Math.max(10, parseInt($('#fontSize').value||'24',10)),
-        textColor: $('#textColor').value,
-        speed: Math.max(1, Math.min(10, parseInt($('#speed').value||'5',10))), // 1..10
-        cursor: $('#cursorUrl').value.trim(),
-        answersPerQuestion: Math.max(2, Math.min(10, parseInt($('#answersPerQuestion').value||'4',10))),
-        spawnInterval: Math.max(200, parseInt($('#spawnInterval').value||'900',10)),
-        questions
-      };
+  language: $('#language').value,
+  font: $('#font').value,
+  fontSize: Math.max(10, parseInt($('#fontSize').value||'24',10)),
+  textColor: $('#textColor').value,
+  speed: Math.max(1, Math.min(10, parseInt($('#speed').value||'5',10))),
+  cursor: $('#cursorUrl').value.trim(),
+
+  // новая группа стилей
+  style: {
+    shape: $('#shape').value,                     // Прямоугольник / Скруглённый / Круг
+    bgColor: $('#bgColor').value,                 // #RRGGBB
+    bgImage: $('#bgImage').value.trim(),          // URL (опц.)
+    borderEnabled: $('#borderOn').checked,
+    borderColor: $('#borderColor').value,
+    borderWidth: Math.max(0, parseInt($('#borderWidth').value||'0',10)),
+    shadow: $('#shadowOn').checked,
+    glow: $('#glowOn').checked,
+    glowColor: $('#glowColor').value,
+    alpha: Math.max(0, Math.min(1, parseFloat($('#alpha').value||'1'))),
+    padding: Math.max(0, parseInt($('#padding').value||'22',10)),
+    effect3d: $('#effect3d').checked
+  },
+
+  answersPerQuestion: Math.max(2, Math.min(10, parseInt($('#answersPerQuestion').value||'4',10))),
+  spawnInterval: Math.max(200, parseInt($('#spawnInterval').value||'900',10)),
+  questions
+};
+
     }
 
     function validate(cfg){
