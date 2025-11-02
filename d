@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Редактор — Парящий квиз (КГБ)</title>
-  <style>
+<link id="gf" rel="stylesheet" href="">
+<style>
     :root{ --ui-acc:#ffd700; --card:#151515; --ink:#eee; --muted:#b7b7b7; --stroke:#2a2a2a; --gap:16px; }
     *{box-sizing:border-box} html,body{height:100%}
     body{ margin:0; background:#0d0d0d; color:var(--ink); font-family:Rubik,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; display:flex; flex-direction:column;}
@@ -66,8 +67,17 @@
           </select>
         </div>
         <div>
-          <label>Шрифт</label>
-          <input type="text" id="font" value="PT Sans" placeholder="например: PT Sans, Inter, Montserrat">
+         <label>Шрифт</label>
+<select id="font">
+  <option selected>PT Sans</option>
+  <option>Rubik</option>
+  <option>Lobster</option>
+  <option>Marck Script</option>
+  <option>Cormorant</option>
+  <option>Montserrat</option>
+  <option>Open Sans</option>
+  <option>Noto Sans</option>
+</select>
         </div>
       </div>
 
@@ -154,12 +164,37 @@
     const $=s=>document.querySelector(s); const $$=s=>document.querySelectorAll(s);
 
     // Предпросмотр
-    function applyFontToPreview(){
-      const text=$('#previewText');
-      text.style.fontFamily = $('#font').value + ", system-ui, sans-serif";
-      text.style.fontSize   = (parseInt($('#fontSize').value,10)||24)+'px';
-      text.style.color      = $('#textColor').value;
-    }
+    // соответствие названия → имя семьи в Google Fonts
+const GF_FAMILY = {
+  'PT Sans': 'PT+Sans',
+  'Rubik': 'Rubik',
+  'Lobster': 'Lobster',
+  'Marck Script': 'Marck+Script',
+  'Cormorant': 'Cormorant',
+  'Montserrat': 'Montserrat',
+  'Open Sans': 'Open+Sans',
+  'Noto Sans': 'Noto+Sans'
+};
+
+function loadGF(name){
+  const fam = GF_FAMILY[name];
+  const link = document.getElementById('gf');
+  if(link){
+    link.href = fam
+      ? `https://fonts.googleapis.com/css2?family=${fam}:wght@400;700&display=swap`
+      : '';
+  }
+}
+
+function applyFontToPreview(){
+  const font = $('#font').value;       // теперь это <select>
+  loadGF(font);                        // догружаем выбранный шрифт
+  const text = $('#previewText');
+  text.style.fontFamily = `${font}, system-ui, sans-serif`;
+  text.style.fontSize   = (parseInt($('#fontSize').value,10)||24)+'px';
+  text.style.color      = $('#textColor').value;
+}
+
     function updatePreview(){
       const item=$('#previewItem'); const text=$('#previewText'); const val=$('#previewValue').value.trim();
       const asImage = item.dataset.mode==='image' || /^https?:\/\//i.test(val);
