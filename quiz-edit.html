@@ -86,9 +86,35 @@ button{ cursor:pointer; user-select:none }
 #saveBtn:active{ transform:translateY(1px) }
 button.danger{ background:var(--danger); border:none; color:#fff }
 
-.preview-stage{ background:#0c0c0c; border:1px solid #2a2a2a; border-radius:14px; padding:18px; height:220px; display:flex; align-items:center; justify-content:center }
-.preview-item{ background:#141414; border:1px solid #2a2a2a; border-radius:14px; padding:22px; min-width:160px; box-shadow:0 10px 24px rgba(0,0,0,.35) }
-#previewText{ font-weight:800 }
+.preview-controls{ display:flex; gap:10px; align-items:center; margin-bottom:12px }
+.preview-controls .btn-ghost{
+  background:#222; border:1px solid #3a3a3a; border-radius:12px;
+  padding:10px 14px; font-weight:800;
+}
+.preview-controls .btn-ghost.active{
+  background:#151515; border-color:#ffd700; color:#ffd700;
+  box-shadow:0 0 0 3px rgba(255,215,0,.18) inset;
+}
+.preview-stage{
+  background:#0b0b0b; border:1px solid #2a2a2a; border-radius:14px;
+  padding:18px; height:320px; display:flex; align-items:center; justify-content:center
+}
+.preview-item{
+  display:flex; align-items:center; justify-content:center;
+  min-width:260px; min-height:120px; padding:22px 36px;
+  background:#141414; border:2px solid rgba(255,255,255,.18);
+  border-radius:9999px;
+  box-shadow:0 14px 30px rgba(0,0,0,.55), inset 0 -3px 0 rgba(255,255,255,.06);
+}
+#previewText{
+  font-weight:900; font-size:34px; color:#fff;
+  text-shadow:0 0 18px rgba(255,255,255,.14);
+}
+.preview-item[data-mode="image"]{
+  border-radius:14px; min-width:320px; min-height:220px;
+  background:#141414 center/contain no-repeat;
+}
+.preview-item[data-mode="image"] #previewText{ display:none }
 
 .result{ margin-top:10px; display:grid; grid-template-columns:1fr auto; gap:12px; align-items:start }
 textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace }
@@ -301,6 +327,37 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
 <script>
 // здесь остаётся твой JS как есть
 </script>
+<script>
+(function(){
+  const item  = document.getElementById('previewItem');
+  const text  = document.getElementById('previewText');
+  const input = document.getElementById('previewValue');
+  const bText = document.getElementById('btnText');
+  const bImg  = document.getElementById('btnImage');
 
+  function setActive(btn){
+    [bText,bImg].forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function setMode(mode){
+    item.setAttribute('data-mode', mode);
+    if(mode==='image'){
+      const v = (input.value||'').trim();
+      item.style.backgroundImage = /^https?:\/\//i.test(v) ? `url("${v}")` : 'none';
+    }else{
+      item.style.backgroundImage = 'none';
+      text.textContent = (input.value||'').trim() || 'Preview';
+    }
+  }
+
+  bText.addEventListener('click', ()=>{ setActive(bText); setMode('text'); });
+  bImg .addEventListener('click', ()=>{ setActive(bImg ); setMode('image'); });
+  input.addEventListener('input', ()=> setMode(item.getAttribute('data-mode')||'text'));
+
+  setActive(bText);
+  setMode('text');
+})();
+</script>
 </body>
 </html>
