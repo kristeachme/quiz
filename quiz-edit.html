@@ -278,22 +278,25 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
       </div>
     </div>
 
-    <div class="card">
-      <h2>💻 Предпросмотр</h2>
-      <div class="preview-controls">
-        <input type="text" id="previewValue" placeholder="Текст предпросмотра или URL картинки..." value="Preview">
-        <div>
-          <button type="button" class="btn-ghost" id="btnText">Текст</button>
-          <button type="button" class="btn-ghost" id="btnImage">Картинка</button>
-        </div>
-      </div>
-      <div class="preview-stage">
-        <div id="previewItem" class="preview-item" data-mode="text">
-          <span id="previewText">Preview</span>
-        </div>
-      </div>
-      <div class="hint">Если указан URL — показывается картинка/гифка. Шрифт/цвет/размер применяются к тексту предпросмотра.</div>
+    <div class="card" style="border-style:dashed">
+  <h2>💻 Предпросмотр</h2>
+
+  <div class="preview-controls">
+    <button class="btn-ghost active" id="btnText">Текст</button>
+    <button class="btn-ghost" id="btnImage">Картинка</button>
+  </div>
+
+  <div class="preview-stage">
+    <div id="previewItem" class="preview-item" data-mode="text">
+      <span id="previewText">Текст</span>
     </div>
+  </div>
+
+  <div class="hint">
+    Предпросмотр обновляется сразу при изменении любой настройки.
+    Если указан URL картинки — цвет фона не используется.
+  </div>
+</div>
 
   </section>
 
