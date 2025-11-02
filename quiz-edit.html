@@ -12,7 +12,7 @@
   --soft:#2a2a2a;
   --text:#eaeaea;
   --muted:#b7b7b7;
-  --accent:#ffd400;      /* жёлтый */
+  --accent:#ffd400;
   --accent-600:#e5bf00;
   --accent-700:#caa900;
   --danger:#e54545;
@@ -27,7 +27,6 @@ body{
   font-family:'PT Sans',system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif;
 }
 
-/* ───── ШАПКА ───── (как на скрине) */
 .topbar{
   display:flex; align-items:center; gap:10px;
   padding:10px 18px; background:#111; border-bottom:2px solid #1c1c1c;
@@ -37,22 +36,25 @@ body{
   font-weight:900; color:#ffd400; font-size:22px; letter-spacing:.3px;
 }
 
-/* ───── СЕТКА ───── */
 main{
   display:grid; grid-template-columns: 480px 1fr; gap:24px; padding:24px; align-items:start;
 }
 
-/* ───── КАРТОЧКИ ───── */
 .card{
   background:linear-gradient(180deg, rgba(255,255,255,.02), transparent 24%), var(--card);
   border-radius:var(--radius); padding:20px; box-shadow:var(--shadow);
 }
 section.card>.card{ margin-top:18px }
 
-/* Заголовки */
-h2{ margin:0 0 14px; font-size:20px; font-weight:800; letter-spacing:.2px }
+h2{
+  margin-top:0;
+  margin-bottom:12px;
+  font-size:1.2rem;
+  color:var(--accent);
+  font-weight:800;
+  letter-spacing:0.2px;
+}
 
-/* ───── ФОРМЫ ───── */
 .row{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:12px }
 .row>div{ flex:1 1 180px; min-width:180px }
 label{ display:block; margin:0 0 6px; color:var(--muted); font-weight:600; font-size:13px }
@@ -65,13 +67,11 @@ input[type="text"],input[type="number"],input[type="url"],input[type="color"],se
 input[type="color"]{ padding:6px 8px; height:40px }
 input:focus,select:focus,textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(255,212,0,.18) }
 
-/* Плашка */
 .pill{
   display:inline-block; background:#262626; color:#ddd; border:1px solid #343434;
   padding:4px 10px; border-radius:999px; font-size:12px; font-weight:600;
 }
 
-/* Кнопки */
 button{ cursor:pointer; user-select:none }
 .btn-ghost{
   background:#222; color:var(--text); border:1px solid #3a3a3a; border-radius:10px;
@@ -87,20 +87,16 @@ button{ cursor:pointer; user-select:none }
 #saveBtn:active{ transform:translateY(1px) }
 button.danger{ background:var(--danger); border:none; color:#fff }
 
-/* Предпросмотр */
 .preview-stage{ background:#0c0c0c; border:1px solid #2a2a2a; border-radius:14px; padding:18px; height:220px; display:flex; align-items:center; justify-content:center }
 .preview-item{ background:#141414; border:1px solid #2a2a2a; border-radius:14px; padding:22px; min-width:160px; box-shadow:0 10px 24px rgba(0,0,0,.35) }
 #previewText{ font-weight:800 }
 
-/* Публикация */
 .result{ margin-top:10px; display:grid; grid-template-columns:1fr auto; gap:12px; align-items:start }
 textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace }
 
-/* Вопросы */
 #levels .card, .qbox{ background:#191919; border:1px solid #2b2b2b; border-radius:14px; padding:16px }
 #levels h3{ margin:0 0 12px; font-size:16px }
 
-/* ───── ПОДВАЛ ───── */
 .footer{
   margin-top:28px; padding:12px 24px; border-top:1px solid #1c1c1c;
   color:#bbb; display:flex; gap:10px; align-items:center; justify-content:center
@@ -108,23 +104,18 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
 .footer img{ width:20px; height:20px; object-fit:contain }
 .footer a{ color:var(--accent); text-decoration:none; font-weight:800 }
 
-/* Адаптив */
 @media (max-width:1080px){ main{ grid-template-columns:1fr } }
 </style>
 </head>
 <body>
 
-<!-- Шапка с эмблемой (точно как на скрине) -->
 <header class="topbar">
   <img class="logo" src="kgb-logo.svg" alt="КГБ" onerror="this.onerror=null;this.src='kgb-logo.png'">
   <div class="title">Редактор игры «Парящий квиз» — КГБ</div>
 </header>
 
 <main>
-  <!-- ЛЕВАЯ КОЛОНКА: Параметры → Общие → Оформление → Предпросмотр -->
   <section class="card">
-
-    <!-- 🛠 Параметры квиза -->
     <div class="card" style="margin-top:6px">
       <h2>🛠 Параметры квиза</h2>
       <div class="row">
@@ -148,7 +139,6 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
       </div>
     </div>
 
-    <!-- ⚙️ Общие настройки -->
     <div class="card">
       <h2>⚙️ Общие настройки</h2>
       <div class="row">
@@ -203,7 +193,6 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
       </div>
     </div>
 
-    <!-- 🎨 Оформление элементов -->
     <div class="card">
       <h2>🎨 Оформление элементов</h2>
       <div class="row">
@@ -264,7 +253,6 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
       </div>
     </div>
 
-    <!-- 💻 Предпросмотр -->
     <div class="card">
       <h2>💻 Предпросмотр</h2>
       <div class="preview-controls">
@@ -284,7 +272,6 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
 
   </section>
 
-  <!-- ПРАВАЯ КОЛОНКА: Вопросы + Публикация -->
   <section class="card">
     <h2>❓ Вопросы</h2>
     <div id="levels" class="levels"></div>
@@ -306,7 +293,6 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
   </section>
 </main>
 
-<!-- Подвал с эмблемой -->
 <footer class="footer">
   <img src="kgb-logo.svg" alt="КГБ" onerror="this.onerror=null;this.src='kgb-logo.png'">
   <span>© 2025</span>
