@@ -10,8 +10,12 @@
   --bg:#0f0f0f;
   --card:#1b1b1b;
   --soft:#2a2a2a;
-  --text:#ffffff;
-  --accent:#ffd700;
+  --text:#eaeaea;
+  --muted:#b7b7b7;
+  --accent:#ffd400;
+  --accent-600:#e5bf00;
+  --accent-700:#caa900;
+  --danger:#e54545;
   --radius:16px;
   --shadow:0 10px 24px rgba(0,0,0,.45);
 }
@@ -19,12 +23,8 @@
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:'Rubik',system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif;
-  font-weight:500;
-  text-shadow:0 0 8px rgba(255,255,255,0.08);
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:'PT Sans',system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif;
 }
 
 .topbar{
@@ -33,7 +33,7 @@ body{
 }
 .topbar .logo{ width:42px; height:42px; object-fit:contain }
 .topbar .title{
-  font-weight:900; color:#ffd700; font-size:22px; letter-spacing:.3px;
+  font-weight:900; color:#ffd400; font-size:22px; letter-spacing:.3px;
 }
 
 main{
@@ -54,45 +54,37 @@ section.card>.card{ margin-top:18px }
   letter-spacing:0.2px;
   text-shadow:0 0 10px rgba(255,215,0,.25);
 }
-
 .row{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:12px }
 .row>div{ flex:1 1 180px; min-width:180px }
-
-label{
-  display:block;
-  margin:0 0 8px;
-  color:#fefefe;
-  font-weight:700;
-  font-size:15px;
-  letter-spacing:0.2px;
-}
+label{ display:block; margin:0 0 6px; color:var(--muted); font-weight:600; font-size:13px }
 
 input[type="text"],input[type="number"],input[type="url"],input[type="color"],select,textarea{
-  width:100%; background:#222; color:#fff;
+  width:100%; background:#222; color:var(--text);
   border:1px solid #353535; border-radius:10px; padding:10px 12px; font-size:14px;
   outline:none; transition:border-color .18s, box-shadow .18s, background .18s;
 }
 input[type="color"]{ padding:6px 8px; height:40px }
-input:focus,select:focus,textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(255,215,0,.2) }
+input:focus,select:focus,textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(255,212,0,.18) }
 
 .pill{
   display:inline-block; background:#262626; color:#ddd; border:1px solid #343434;
   padding:4px 10px; border-radius:999px; font-size:12px; font-weight:600;
 }
 
-button{ cursor:pointer; user-select:none; font-family:'Rubik',sans-serif; }
+button{ cursor:pointer; user-select:none }
 .btn-ghost{
-  background:#222; color:#fff; border:1px solid #3a3a3a; border-radius:10px;
+  background:#222; color:var(--text); border:1px solid #3a3a3a; border-radius:10px;
   padding:9px 12px; font-weight:700; transition:transform .12s, background .12s, border-color .12s;
 }
 .btn-ghost:hover{ background:#272727; border-color:#4a4a4a; transform:translateY(-1px) }
 #saveBtn{
   background:var(--accent); color:#111; border:none; border-radius:12px;
-  padding:14px 18px; font-weight:800; font-size:16px;
-  box-shadow:0 8px 16px rgba(255,215,0,.25), inset 0 -2px 0 #caa900;
+  padding:14px 18px; font-weight:900; font-size:16px;
+  box-shadow:0 8px 16px rgba(255,212,0,.25), inset 0 -2px 0 var(--accent-700);
 }
-#saveBtn:hover{ background:#e5bf00 }
+#saveBtn:hover{ background:var(--accent-600) }
 #saveBtn:active{ transform:translateY(1px) }
+button.danger{ background:var(--danger); border:none; color:#fff }
 
 .preview-stage{ background:#0c0c0c; border:1px solid #2a2a2a; border-radius:14px; padding:18px; height:220px; display:flex; align-items:center; justify-content:center }
 .preview-item{ background:#141414; border:1px solid #2a2a2a; border-radius:14px; padding:22px; min-width:160px; box-shadow:0 10px 24px rgba(0,0,0,.35) }
@@ -124,7 +116,7 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
 <main>
   <section class="card">
     <div class="card" style="margin-top:6px">
-      <h2>🛠 Параметры квиза</h2>
+      <h2>✅ Параметры квиза</h2>
       <div class="row">
         <div>
           <label>Вариантов на вопрос (2–10)</label>
@@ -307,7 +299,7 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
 </footer>
 
 <script>
-// твой текущий JS остаётся без изменений
+// здесь остаётся твой JS как есть
 </script>
 
 </body>
