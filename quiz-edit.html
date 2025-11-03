@@ -433,10 +433,7 @@ addQ();
 const $  = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 
-const BASE_MAIN = (() => {
-  const dir = location.origin + location.pathname.replace(/[^/]+$/, '');
-  return dir + 'quiz-main.html';
-})();
+const BASE_MAIN = 'https://kristeachme.github.io/quiz/quiz-main.html';
 
 function collectConfig(){
   const questions = [];
