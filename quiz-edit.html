@@ -377,13 +377,13 @@ addQ();
 
     <h2 style="margin-top:16px">🚀 Публикация</h2>
     <div class="row">
-     <button id="saveBtn" type="button" onclick="window.publish && window.publish()">💾 Сохранить и получить iframe</button>
-<button id="testBtn" type="button" class="btn-ghost" onclick="window.quickTest && window.quickTest()">🔍 Валидация JSON</button>
+     <button id="saveBtn"  type="button" onclick="window.publish && window.publish()">💾 Сохранить и получить iframe</button>
+<button id="testBtn"  type="button" class="btn-ghost" onclick="window.quickTest && window.quickTest()">🔍 Валидация JSON</button>
 
 <textarea id="iframeOut" placeholder="Здесь появится iframe для вставки"></textarea>
 
 <button id="copyBtn" type="button" class="btn-ghost" onclick="window.copyIframe && window.copyIframe()">📋 Копировать</button>
-      
+
     </div>
   </section>
 </main>
@@ -429,7 +429,7 @@ addQ();
   setMode('text');
 })();
 </script>
- <script>
+<script>
 const $  = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 
@@ -441,19 +441,25 @@ function collectConfig(){
     questions.push({
       question: (div.querySelector('.question')?.value || '').trim(),
       correct : (div.querySelector('.correct') ?.value || '').trim(),
-      wrong   : (div.querySelector('.wrong')   ?.value || '')
-                  .split('\n').map(s=>s.trim()).filter(Boolean)
+      wrong   : (div.querySelector('.wrong')   ?.value || '').split('\n').map(s=>s.trim()).filter(Boolean)
     });
   });
 
   const answersPerQuestion = parseInt($('#answersPerQuestion')?.value ?? '4', 10);
   const spawnInterval      = parseInt($('#spawnInterval')?.value      ?? '900', 10);
   const direction          = $('#direction')?.value ?? 'vertical';
+  const speed              = parseInt($('#speed')?.value ?? '5', 10);
+  const font               = ($('#font')?.value || '').trim();
+  const fontSize           = parseInt($('#fontSize')?.value ?? '24', 10);
+  const textColor          = $('#textColor')?.value || '#ffffff';
+  const cursor             = ($('#cursorUrl')?.value || '').trim();
 
   return {
     answersPerQuestion: Math.max(2, Math.min(10, isNaN(answersPerQuestion)?4:answersPerQuestion)),
     spawnInterval     : Math.max(200, isNaN(spawnInterval)?900:spawnInterval),
     direction,
+    speed: Math.max(1, Math.min(10, isNaN(speed)?5:speed)),
+    font, fontSize: Math.max(10, isNaN(fontSize)?24:fontSize), textColor, cursor,
     questions
   };
 }
@@ -479,7 +485,7 @@ function makeId(cfg){
   return `${slug}-${stamp}`;
 }
 
-function doPublish(){
+function publish(){
   const cfg = collectConfig();
   const err = validateConfig(cfg);
   if (err){ alert(err); return; }
@@ -497,30 +503,30 @@ function doPublish(){
   const out = $('#iframeOut');
   if (out) out.value = iframe;
 
-  alert('JSON сохранён. Загрузите файл в папку /data вашего репозитория — после этого iframe будет работать.');
+  alert('JSON сохранён. Загрузите файл в папку /data вашего репозитория. После загрузки ссылка в iframe заработает.');
 }
 
-function doQuickTest(){
+function quickTest(){
   const cfg = collectConfig();
   const err = validateConfig(cfg);
   if (err){ alert(err); return; }
   alert('JSON валиден. Вопросов: ' + cfg.questions.length);
 }
 
-function doCopyIframe(){
+function copyIframe(){
   const v = $('#iframeOut')?.value?.trim();
   if (!v){ alert('Сначала получите iframe.'); return; }
   navigator.clipboard.writeText(v).catch(()=>{});
 }
 
-window.publish    = doPublish;
-window.quickTest  = doQuickTest;
-window.copyIframe = doCopyIframe;
+window.publish    = publish;
+window.quickTest  = quickTest;
+window.copyIframe = copyIframe;
 
 document.addEventListener('DOMContentLoaded', () => {
-  $('#saveBtn')?.addEventListener('click', e => { e.preventDefault(); doPublish(); });
-  $('#testBtn')?.addEventListener('click', e => { e.preventDefault(); doQuickTest(); });
-  $('#copyBtn')?.addEventListener('click', e => { e.preventDefault(); doCopyIframe(); });
+  $('#saveBtn')?.addEventListener('click', e => { e.preventDefault(); publish(); });
+  $('#testBtn')?.addEventListener('click', e => { e.preventDefault(); quickTest(); });
+  $('#copyBtn')?.addEventListener('click', e => { e.preventDefault(); copyIframe(); });
 });
 </script>
 
