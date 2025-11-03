@@ -1,0 +1,13 @@
+{
+  "answersPerQuestion": 4,
+  "spawnInterval": 900,
+  "direction": "vertical",
+  "speed": 5,
+  "font": "Rubik",
+  "fontSize": 28,
+  "textColor": "#ffffff",
+  "cursor": "",
+  "questions": [
+    { "question": "Столица Франции?", "correct": "Париж", "wrong": ["Марсель","Лион","Ницца"] }
+  ]
+}
