@@ -298,33 +298,82 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
   </section>
 
   <section class="card">
-    <h2>❓ Вопросы</h2>
-    <div id="levels">
-  <div class="qcard">
-    <div class="qhead">
-      <div class="qtitle">Вопрос</div>
-      <div class="qindex">1</div>
-      <div class="qactions">
-        <button class="qbtn">▲</button>
-        <button class="qbtn">▼</button>
-        <button class="qbtn danger">Удалить</button>
+   <h2>❓ Вопросы</h2>
+<div id="levels" class="levels"></div>
+<div class="toolbar">
+  <button id="addQ" type="button">➕ Добавить вопрос</button>
+  <span class="pill">Неограниченно вопросов</span>
+</div>
+
+<style>
+.levels .level{
+  background:#111; border:1px solid #2a2a2a; border-radius:12px; padding:16px;
+}
+.level h3{
+  margin:0 0 10px; font-size:16px; color:#fff;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.level h3 .num{ font-weight:800 }
+.right{ display:flex; gap:10px; align-items:center }
+.level .row{ display:grid; grid-template-columns:1fr 1fr; gap:16px }
+.level input[type="text"], .level input[type="number"], .level textarea{
+  width:100%; background:#101010; color:#fff;
+  border:1px solid #3a3a3a; border-radius:10px; padding:12px 14px; font-size:16px;
+}
+.level textarea{ min-height:110px; resize:vertical }
+.level .btn-ghost{ background:transparent; color:#fff; border:1px solid #444; border-radius:12px; padding:10px 12px; font-weight:800 }
+.level .btn-danger{ background:#a80000; color:#fff; border:none; border-radius:12px; padding:10px 12px; font-weight:800 }
+.toolbar{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px }
+.pill{ display:inline-block; padding:8px 12px; border:1px dashed #444; border-radius:999px; color:#bbb; font-size:13px }
+</style>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function qTemplate(idx){
+  const wrap = document.createElement('div');
+  wrap.className = 'level';
+  wrap.innerHTML = `
+    <h3>Вопрос <span class="num">${idx+1}</span>
+      <span class="right">
+        <button type="button" class="btn-ghost up">▲</button>
+        <button type="button" class="btn-ghost down">▼</button>
+        <button type="button" class="btn-danger del">Удалить</button>
+      </span>
+    </h3>
+    <label>Текст вопроса (вверху)</label>
+    <input type="text" class="question" placeholder="Например: Столица Франции?">
+    <div class="row">
+      <div>
+        <label>Правильный ответ (текст или URL)</label>
+        <input type="text" class="correct" placeholder="Париж или https://.../cat.gif">
+      </div>
+      <div>
+        <label>Неправильные (по одному в строке)</label>
+        <textarea class="wrong" placeholder="Марсель\nЛион\nНицца"></textarea>
       </div>
     </div>
+  `;
+  wrap.querySelector('.del').onclick  = () => { wrap.remove(); renumber(); };
+  wrap.querySelector('.up').onclick   = () => { const p = wrap.previousElementSibling; if(p){ wrap.parentNode.insertBefore(wrap, p); renumber(); } };
+  wrap.querySelector('.down').onclick = () => { const n = wrap.nextElementSibling; if(n){ wrap.parentNode.insertBefore(n, wrap); renumber(); } };
+  return wrap;
+}
 
-    <div class="qgrid">
-      <label class="full">Текст вопроса (вверху)</label>
-      <input type="text" class="full" placeholder="Например: Столица Франции?">
+function addQ(){
+  const idx = $$('#levels .level').length;
+  $('#levels').appendChild(qTemplate(idx));
+  renumber();
+}
 
-      <label>Правильный ответ (текст или URL)</label>
-      <input type="text" placeholder="Париж или https://.../cat.gif">
+function renumber(){
+  $$('#levels .level .num').forEach((n,i)=> n.textContent = i+1);
+}
 
-      <label>Неправильные (по одному в строке)</label>
-      <textarea>Марсель
-Лион
-Ницца</textarea>
-    </div>
-  </div>
-</div>
+document.getElementById('addQ').addEventListener('click', e => { e.preventDefault(); addQ(); });
+addQ();
+</script>
 
     <h2 style="margin-top:16px">🚀 Публикация</h2>
     <div class="row">
