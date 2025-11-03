@@ -51,11 +51,12 @@ const hudQ = document.getElementById('hudQ');
 const hudScore = document.getElementById('hudScore');
 const popSound = document.getElementById('popSound');
 const winSound = document.getElementById('winSound');
+
 const $ = s=>document.querySelector(s);
 const rnd=(a,b)=>a+Math.random()*(b-a);
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 
-// маппинг 1..10 → пикс/кадр (мягкая шкала)
+// 1..10 → пикс/кадр
 function speedToPxPerFrame(s){
   const v = Math.max(1, Math.min(10, Number(s||5)));
   return 0.8 + (v-1)*0.3; // 1→0.8 … 10→3.5
@@ -66,7 +67,6 @@ function applyTypography(){
   const size = Math.max(10, Number(CFG.fontSize||24));
   const color = CFG.textColor || '#ffffff';
 
-  // Google Fonts
   if(font && !/system-ui|Arial|Segoe|Roboto/i.test(font)){
     const gf=document.getElementById('gf');
     gf.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g,'+')}:wght@400;700&display=swap`;
@@ -108,9 +108,9 @@ function startOverlay(){
   ov.innerHTML=`<div class="panel">
     <h2>Парящий квиз — КГБ</h2>
     <p style="opacity:.9">
-  Кликни по правильному варианту. Неправильные исчезают.
-  <br>Направление: <b>${(CFG.direction==='horizontal'?'слева направо':'сверху вниз')}</b>
-</p>
+      Кликни по правильному варианту. Неправильные исчезают.
+      <br>Направление: <b>${(CFG.direction==='horizontal'?'слева направо':'сверху вниз')}</b>
+    </p>
     <button id="startBtn">Начать</button>
   </div>`;
   document.body.appendChild(ov);
@@ -129,7 +129,7 @@ function nextQuestion(){
   document.querySelectorAll('.item').forEach(n=>n.remove());
 
   const Q = CFG.questions||[];
-  if(qIndex>=Q.length){ return finish(); }
+  if(qIndex>=Q.length){ finish(); return; }
 
   const q = Q[qIndex];
   hudQ.textContent = q.question || `Вопрос ${qIndex+1}`;
@@ -150,7 +150,8 @@ function nextQuestion(){
     drop(OPTIONS[idx], speedToPxPerFrame(CFG.speed), dir);
     idx = (idx+1) % OPTIONS.length;
   }, interval);
-  
+}
+
 function finish(){
   running=false;
   try{ winSound.currentTime=0; winSound.play(); }catch(_){}
@@ -168,18 +169,26 @@ function drop(opt, speedPx, direction){
   const el=document.createElement('div'); el.className='item'; el.dataset.good=opt.good?'1':'0';
   const bg=document.createElement('div'); bg.className='bg';
   const content=document.createElement('div'); content.className='content';
-  ...
+
+  // текст или картинка
+  const isUrl = /^https?:\/\//i.test(opt.val||'');
+  if(isUrl){
+    bg.style.backgroundImage = `url("${opt.val}")`;
+  }else{
+    const span=document.createElement('span');
+    span.textContent = String(opt.val||'').trim() || '...';
+    content.appendChild(span);
+  }
+
   el.appendChild(bg); el.appendChild(content);
 
   const gw=game.clientWidth, gh=game.clientHeight;
 
   if(direction === 'horizontal'){
-    // стартуем слева, случайная высота
     const startY = Math.max(16, Math.min(gh-200, rnd(0, gh-200)));
     el.style.top = startY+'px';
     el.style.left = '-260px';
   }else{
-    // по-умолчанию — сверху вниз
     const startX = Math.max(16, Math.min(gw-260, rnd(0, gw-260)));
     el.style.left = startX+'px';
     el.style.top  = '-160px';
@@ -192,6 +201,7 @@ function drop(opt, speedPx, direction){
     fit(el);
     if(direction === 'horizontal') fallH(el, speedPx);
     else fallV(el, speedPx);
+
     el.addEventListener('click', ()=>{
       if(el.dataset.dead==='1') return;
       if(el.dataset.good==='1'){
@@ -207,7 +217,14 @@ function drop(opt, speedPx, direction){
   });
 }
 
-function fallV(el, v){ // сверху вниз
+function fit(el){
+  const content = el.querySelector('.content span');
+  if(!content) return;
+  const maxW = Math.min(520, game.clientWidth * 0.6);
+  el.style.maxWidth = maxW+'px';
+}
+
+function fallV(el, v){
   let y=-160, t=0; const swayAmp=rnd(6,22), swayFreq=rnd(0.003,0.008);
   (function step(){
     if(el.dataset.dead==='1') return;
@@ -219,7 +236,7 @@ function fallV(el, v){ // сверху вниз
   })();
 }
 
-function fallH(el, v){ // слева направо
+function fallH(el, v){
   let x=-260, t=0; const swayAmp=rnd(6,22), swayFreq=rnd(0.003,0.008);
   (function step(){
     if(el.dataset.dead==='1') return;
