@@ -116,20 +116,16 @@ button.danger{ background:var(--danger); border:none; color:#fff }
 }
 .preview-item[data-mode="image"] #previewText{ display:none }
 
-.result{ margin-top:10px; display:grid; grid-template-columns:1fr auto; gap:12px; align-items:start }
-textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace }
+.result{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
+textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.level{background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:14px}
+.level h3{margin:0 0 10px;display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}
+.level .num{justify-self:center;font-weight:900}
+.level .actions{justify-self:end;display:flex;gap:8px}
+.level .actions .btn-ghost{padding:8px 10px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:1080px){ .grid-2{grid-template-columns:1fr} main{grid-template-columns:1fr} }
 
-#levels .card, .qbox{ background:#191919; border:1px solid #2b2b2b; border-radius:14px; padding:16px }
-#levels h3{ margin:0 0 12px; font-size:16px }
-
-.footer{
-  margin-top:28px; padding:12px 24px; border-top:1px solid #1c1c1c;
-  color:#bbb; display:flex; gap:10px; align-items:center; justify-content:center
-}
-.footer img{ width:20px; height:20px; object-fit:contain }
-.footer a{ color:var(--accent); text-decoration:none; font-weight:800 }
-
-@media (max-width:1080px){ main{ grid-template-columns:1fr } }
 </style>
 </head>
 <body>
@@ -375,10 +371,40 @@ document.getElementById('addQ').addEventListener('click', e => { e.preventDefaul
 addQ();
 </script>
 
-    <h2 style="margin-top:16px">🚀 Публикация</h2>
-    <div class="row">
-     <button id="saveBtn"  type="button" onclick="window.publish && window.publish()">💾 Сохранить и получить iframe</button>
-<button id="testBtn"  type="button" class="btn-ghost" onclick="window.quickTest && window.quickTest()">🔍 Валидация JSON</button>
+<div class="grid-2" style="margin-top:10px">
+  <!-- 🎬 Запуск квиза -->
+  <div class="card">
+    <h2>🎬 Запуск квиза</h2>
+    <label>Текст при запуске (заголовок/фраза)</label>
+    <input type="text" id="startTitle" placeholder="Например: Игра «Парящий квиз»">
+    <div class="row" style="margin-top:8px">
+      <div>
+        <label>Текст кнопки запуска</label>
+        <input type="text" id="startButton" placeholder="Например: Начать">
+      </div>
+    </div>
+    <div style="font-size:12px;color:#bbb;margin-top:6px">
+      Если оставить пустым — будет использован стандартный текст («Начать игру»).
+    </div>
+  </div>
+
+  <!-- 🏁 Финальный фидбек -->
+  <div class="card">
+    <h2>🏁 Финальный фидбек</h2>
+    <label>Текст, который появится после завершения игры</label>
+    <textarea id="finalFeedback" placeholder="Например: Отличная работа!"></textarea>
+    <div style="font-size:12px;color:#bbb;margin-top:6px">
+      Если оставить пустым — будет показан стандартный текст («Отличная работа!» или локализованный).
+    </div>
+  </div>
+</div>
+
+<!-- Публикация -->
+<h2 style="margin-top:14px">🚀 Публикация</h2>
+<div class="row">
+  <button id="saveBtn"  type="button" class="btn"       onclick="window.publish && window.publish()">💾 Сохранить и получить iframe</button>
+  <button id="testBtn"  type="button" class="btn-ghost" onclick="window.quickTest && window.quickTest()">🔍 Валидация JSON</button>
+</div>
 
 <textarea id="iframeOut" placeholder="Здесь появится iframe для вставки"></textarea>
 
@@ -435,34 +461,37 @@ const $$ = s => document.querySelectorAll(s);
 
 const BASE_MAIN = 'https://kristeachme.github.io/quiz/quiz-main.html';
 
-function collectConfig(){
-  const questions = [];
-  $$('#levels .level').forEach(div => {
+function collect(){
+  const questions=[];
+  $$('#levels .level').forEach(div=>{
     questions.push({
-      question: (div.querySelector('.question')?.value || '').trim(),
-      correct : (div.querySelector('.correct') ?.value || '').trim(),
-      wrong   : (div.querySelector('.wrong')   ?.value || '').split('\n').map(s=>s.trim()).filter(Boolean)
+      question: (div.querySelector('.question')?.value||'').trim(),
+      correct : (div.querySelector('.correct') ?.value||'').trim(),
+      wrong   : (div.querySelector('.wrong')   ?.value||'').split('\n').map(s=>s.trim()).filter(Boolean)
     });
   });
 
-  const answersPerQuestion = parseInt($('#answersPerQuestion')?.value ?? '4', 10);
-  const spawnInterval      = parseInt($('#spawnInterval')?.value      ?? '900', 10);
-  const direction          = $('#direction')?.value ?? 'vertical';
-  const speed              = parseInt($('#speed')?.value ?? '5', 10);
-  const font               = ($('#font')?.value || '').trim();
-  const fontSize           = parseInt($('#fontSize')?.value ?? '24', 10);
-  const textColor          = $('#textColor')?.value || '#ffffff';
-  const cursor             = ($('#cursorUrl')?.value || '').trim();
+  const answersPerQuestion=Math.max(2,Math.min(10,parseInt($('#answersPerQuestion')?.value||'4',10)));
+  const spawnInterval=Math.max(200,parseInt($('#spawnInterval')?.value||'900',10));
+  const direction=$('#direction')?.value||'vertical';
+  const speed=Math.max(1,Math.min(10,parseInt($('#speed')?.value||'5',10)));
+  const font=($('#font')?.value||'').trim();
+  const fontSize=Math.max(10,parseInt($('#fontSize')?.value||'24',10));
+  const textColor=$('#textColor')?.value||'#ffffff';
+  const cursor=($('#cursorUrl')?.value||'').trim();
+
+  const startTitle   = ($('#startTitle')  ?.value||'').trim();
+  const startButton  = ($('#startButton') ?.value||'').trim();
+  const finalFeedback= ($('#finalFeedback')?.value||'').trim();
 
   return {
-    answersPerQuestion: Math.max(2, Math.min(10, isNaN(answersPerQuestion)?4:answersPerQuestion)),
-    spawnInterval     : Math.max(200, isNaN(spawnInterval)?900:spawnInterval),
-    direction,
-    speed: Math.max(1, Math.min(10, isNaN(speed)?5:speed)),
-    font, fontSize: Math.max(10, isNaN(fontSize)?24:fontSize), textColor, cursor,
+    answersPerQuestion, spawnInterval, direction, speed,
+    font, fontSize, textColor, cursor,
+    startTitle, startButton, finalFeedback,   /* ← добавлено */
     questions
   };
 }
+
 
 function validateConfig(cfg){
   if (!cfg.questions.length) return 'Добавьте хотя бы один вопрос.';
