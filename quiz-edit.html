@@ -377,13 +377,13 @@ addQ();
 
     <h2 style="margin-top:16px">🚀 Публикация</h2>
     <div class="row">
-      <button id="saveBtn">💾 Сохранить и получить iframe</button>
-      <button id="testBtn" class="btn-ghost">🔍 Валидация JSON</button>
-    </div>
+     <button id="saveBtn" type="button" onclick="window.publish && window.publish()">💾 Сохранить и получить iframe</button>
+<button id="testBtn" type="button" class="btn-ghost" onclick="window.quickTest && window.quickTest()">🔍 Валидация JSON</button>
 
-    <div class="result">
-      <textarea id="iframeOut" readonly placeholder="Здесь появится iframe для вставки"></textarea>
-      <button id="copyBtn" class="btn-ghost">📋 Копировать</button>
+<textarea id="iframeOut" placeholder="Здесь появится iframe для вставки"></textarea>
+
+<button id="copyBtn" type="button" class="btn-ghost" onclick="window.copyIframe && window.copyIframe()">📋 Копировать</button>
+      
     </div>
   </section>
 </main>
@@ -429,7 +429,7 @@ addQ();
   setMode('text');
 })();
 </script>
-  <script>
+ <script>
 const $  = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 
@@ -482,7 +482,7 @@ function makeId(cfg){
   return `${slug}-${stamp}`;
 }
 
-function publish(){
+function doPublish(){
   const cfg = collectConfig();
   const err = validateConfig(cfg);
   if (err){ alert(err); return; }
@@ -500,25 +500,31 @@ function publish(){
   const out = $('#iframeOut');
   if (out) out.value = iframe;
 
-  alert('JSON сохранён на компьютер. Загрузите файл в папку /data вашего репозитория (Add file → Upload files → Commit). После этого iframe заработает.');
+  alert('JSON сохранён. Загрузите файл в папку /data вашего репозитория — после этого iframe будет работать.');
 }
 
-function quickTest(){
+function doQuickTest(){
   const cfg = collectConfig();
   const err = validateConfig(cfg);
   if (err){ alert(err); return; }
   alert('JSON валиден. Вопросов: ' + cfg.questions.length);
 }
 
-function copyIframe(){
+function doCopyIframe(){
   const v = $('#iframeOut')?.value?.trim();
   if (!v){ alert('Сначала получите iframe.'); return; }
-  navigator.clipboard.writeText(v).then(()=>{}).catch(()=>{});
+  navigator.clipboard.writeText(v).catch(()=>{});
 }
 
-$('#saveBtn')?.addEventListener('click', e => { e.preventDefault(); publish(); });
-$('#testBtn')?.addEventListener('click', e => { e.preventDefault(); quickTest(); });
-$('#copyBtn')?.addEventListener('click', e => { e.preventDefault(); copyIframe(); });
+window.publish    = doPublish;
+window.quickTest  = doQuickTest;
+window.copyIframe = doCopyIframe;
+
+document.addEventListener('DOMContentLoaded', () => {
+  $('#saveBtn')?.addEventListener('click', e => { e.preventDefault(); doPublish(); });
+  $('#testBtn')?.addEventListener('click', e => { e.preventDefault(); doQuickTest(); });
+  $('#copyBtn')?.addEventListener('click', e => { e.preventDefault(); doCopyIframe(); });
+});
 </script>
 
 </body>
