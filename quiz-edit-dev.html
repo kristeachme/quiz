@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Редактор игры «Парящий квиз» — КГБ</title>
+
+<style>
+:root{
+  --bg:#0f0f0f;
+  --card:#1b1b1b;
+  --soft:#2a2a2a;
+  --text:#eaeaea;
+  --muted:#b7b7b7;
+  --accent:#ffd400;
+  --accent-600:#e5bf00;
+  --accent-700:#caa900;
+  --danger:#e54545;
+  --radius:16px;
+  --shadow:0 10px 24px rgba(0,0,0,.45);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:'PT Sans',system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif;
+}
+
+.topbar{
+  display:flex; align-items:center; gap:10px;
+  padding:10px 18px; background:#111; border-bottom:2px solid #1c1c1c;
+}
+.topbar .logo{ width:42px; height:42px; object-fit:contain }
+.topbar .title{
+  font-weight:900; color:#ffd400; font-size:22px; letter-spacing:.3px;
+}
+
+main{
+  display:grid; grid-template-columns: 480px 1fr; gap:24px; padding:24px; align-items:start;
+}
+
+.card{
+  background:linear-gradient(180deg, rgba(255,255,255,.02), transparent 24%), var(--card);
+  border-radius:var(--radius); padding:20px; box-shadow:var(--shadow);
+}
+section.card>.card{ margin-top:18px }
+
+.card h2{
+  margin:0 0 14px;
+  font-size:20px;
+  color:#ffd700;
+  font-weight:700;
+  letter-spacing:0.2px;
+  text-shadow:0 0 10px rgba(255,215,0,.25);
+}
+.row{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:12px }
+.row>div{ flex:1 1 180px; min-width:180px }
+label{ display:block; margin:0 0 6px; color:var(--muted); font-weight:600; font-size:13px }
+
+input[type="text"],input[type="number"],input[type="url"],input[type="color"],select,textarea{
+  width:100%; background:#222; color:var(--text);
+  border:1px solid #353535; border-radius:10px; padding:10px 12px; font-size:14px;
+  outline:none; transition:border-color .18s, box-shadow .18s, background .18s;
+}
+input[type="color"]{ padding:6px 8px; height:40px }
+input:focus,select:focus,textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(255,212,0,.18) }
+
+.pill{
+  display:inline-block; background:#262626; color:#ddd; border:1px solid #343434;
+  padding:4px 10px; border-radius:999px; font-size:12px; font-weight:600;
+}
+
+button{ cursor:pointer; user-select:none }
+.btn-ghost{
+  background:#222; color:var(--text); border:1px solid #3a3a3a; border-radius:10px;
+  padding:9px 12px; font-weight:700; transition:transform .12s, background .12s, border-color .12s;
+}
+.btn-ghost:hover{ background:#272727; border-color:#4a4a4a; transform:translateY(-1px) }
+#saveBtn{
+  background:var(--accent); color:#111; border:none; border-radius:12px;
+  padding:14px 18px; font-weight:900; font-size:16px;
+  box-shadow:0 8px 16px rgba(255,212,0,.25), inset 0 -2px 0 var(--accent-700);
+}
+#saveBtn:hover{ background:var(--accent-600) }
+#saveBtn:active{ transform:translateY(1px) }
+button.danger{ background:var(--danger); border:none; color:#fff }
+
+.preview-controls{ display:flex; gap:10px; align-items:center; margin-bottom:12px }
+.preview-controls .btn-ghost{
+  background:#222; border:1px solid #3a3a3a; border-radius:12px;
+  padding:10px 14px; font-weight:800;
+}
+.preview-controls .btn-ghost.active{
+  background:#151515; border-color:#ffd700; color:#ffd700;
+  box-shadow:0 0 0 3px rgba(255,215,0,.18) inset;
+}
+.preview-stage{
+  background:#0b0b0b; border:1px solid #2a2a2a; border-radius:14px;
+  padding:18px; height:320px; display:flex; align-items:center; justify-content:center
+}
+.preview-item{
+  display:flex; align-items:center; justify-content:center;
+  min-width:260px; min-height:120px; padding:22px 36px;
+  background:#141414; border:2px solid rgba(255,255,255,.18);
+  border-radius:9999px;
+  box-shadow:0 14px 30px rgba(0,0,0,.55), inset 0 -3px 0 rgba(255,255,255,.06);
+}
+#previewText{
+  font-weight:900; font-size:34px; color:#fff;
+  text-shadow:0 0 18px rgba(255,255,255,.14);
+}
+.preview-item[data-mode="image"]{
+  border-radius:14px; min-width:320px; min-height:220px;
+  background:#141414 center/contain no-repeat;
+}
+.preview-item[data-mode="image"] #previewText{ display:none }
+
+.result{ margin-top:10px; display:grid; grid-template-columns:1fr auto; gap:12px; align-items:start }
+textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace }
+
+#levels .card, .qbox{ background:#191919; border:1px solid #2b2b2b; border-radius:14px; padding:16px }
+#levels h3{ margin:0 0 12px; font-size:16px }
+
+.footer{
+  margin-top:28px; padding:12px 24px; border-top:1px solid #1c1c1c;
+  color:#bbb; display:flex; gap:10px; align-items:center; justify-content:center
+}
+.footer img{ width:20px; height:20px; object-fit:contain }
+.footer a{ color:var(--accent); text-decoration:none; font-weight:800 }
+
+@media (max-width:1080px){ main{ grid-template-columns:1fr } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <img class="logo" src="kgb-logo.svg" alt="КГБ" onerror="this.onerror=null;this.src='kgb-logo.png'">
+  <div class="title">Редактор игры «Парящий квиз» — КГБ</div>
+</header>
+
+<main>
+  <section class="card">
+    <div class="card" style="margin-top:6px">
+      <h2>✅ Параметры квиза</h2>
+      <div class="row">
+        <div>
+          <label>Вариантов на вопрос (2–10)</label>
+          <input type="number" id="answersPerQuestion" value="4" min="2" max="10">
+        </div>
+        <div>
+          <label>Интервал спавна (мс)</label>
+          <input type="number" id="spawnInterval" value="900" min="200" step="50">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Направление появления</label>
+          <select id="direction">
+            <option value="vertical" selected>Сверху вниз</option>
+            <option value="horizontal">Слева направо</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ Общие настройки</h2>
+      <div class="row">
+        <div>
+          <label>Язык / режим</label>
+          <select id="language">
+            <option value="ru" selected>Русский</option>
+            <option value="en">English (Latin)</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+            <option value="de">Deutsch</option>
+            <option value="zh">中文</option>
+            <option value="ja">日本語</option>
+            <option value="math">Математика (LaTeX)</option>
+          </select>
+        </div>
+        <div>
+          <label>Шрифт</label>
+          <select id="font">
+            <option selected>PT Sans</option>
+            <option>Rubik</option>
+            <option>Lobster</option>
+            <option>Marck Script</option>
+            <option>Cormorant</option>
+            <option>Montserrat</option>
+            <option>Open Sans</option>
+            <option>Noto Sans</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Размер шрифта (px)</label>
+          <input type="number" id="fontSize" value="24" min="10" max="100">
+        </div>
+        <div>
+          <label>Цвет шрифта</label>
+          <input type="color" id="textColor" value="#ffffff">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Скорость падения (1–10)</label>
+          <input type="number" id="speed" value="5" min="1" max="10">
+        </div>
+        <div>
+          <label>Кастомный курсор (URL, опц.)</label>
+          <input type="url" id="cursorUrl" placeholder="https://.../cursor.png">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🎨 Оформление элементов</h2>
+      <div class="row">
+        <div>
+          <label>Фигура</label>
+          <select id="shape">
+            <option selected>Прямоугольник</option>
+            <option>Скруглённый</option>
+            <option>Круг</option>
+          </select>
+        </div>
+        <div>
+          <label>Фон — цвет</label>
+          <input type="color" id="bgColor" value="#151515">
+        </div>
+      </div>
+
+      <label>Фон — картинка (URL, необязательно)</label>
+      <input type="url" id="bgImage" placeholder="https://.../bubble.png">
+
+      <div class="row">
+        <div>
+          <label>Рамка (цвет)</label>
+          <input type="color" id="borderColor" value="#ffffff">
+        </div>
+        <div>
+          <label>Рамка (толщина, px)</label>
+          <input type="number" id="borderWidth" value="1" min="0" max="20">
+        </div>
+      </div>
+
+      <div class="row">
+        <div><label><input type="checkbox" id="borderOn" checked> Рамка включена?</label></div>
+        <div><label><input type="checkbox" id="shadowOn" checked> Тень</label></div>
+      </div>
+
+      <div class="row">
+        <div><label><input type="checkbox" id="glowOn"> Подсветка</label></div>
+        <div>
+          <label>Цвет подсветки</label>
+          <input type="color" id="glowColor" value="#00ffff">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Прозрачность фона/картинки (0–1)</label>
+          <input type="number" id="alpha" value="1" min="0" max="1" step="0.05">
+        </div>
+        <div><label><input type="checkbox" id="effect3d"> 3D эффект</label></div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Внутренние отступы (px)</label>
+          <input type="number" id="padding" value="22" min="0" max="80">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>💻 Предпросмотр</h2>
+      <div class="preview-controls">
+        <input type="text" id="previewValue" placeholder="Текст предпросмотра или URL картинки..." value="Preview">
+        <div>
+          <button type="button" class="btn-ghost" id="btnText">Текст</button>
+          <button type="button" class="btn-ghost" id="btnImage">Картинка</button>
+        </div>
+      </div>
+      <div class="preview-stage">
+        <div id="previewItem" class="preview-item" data-mode="text">
+          <span id="previewText">Preview</span>
+        </div>
+      </div>
+      
+    </div>
+
+  </section>
+
+  <section class="card">
+   <h2>❓ Вопросы</h2>
+<div id="levels" class="levels"></div>
+<div class="toolbar">
+  <button id="addQ" type="button">➕ Добавить вопрос</button>
+  <span class="pill">Неограниченно вопросов</span>
+</div>
+
+<style>
+.levels .level{
+  background:#111; border:1px solid #2a2a2a; border-radius:12px; padding:16px;
+}
+.level h3{
+  margin:0 0 10px; font-size:16px; color:#fff;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.level h3 .num{ font-weight:800 }
+.right{ display:flex; gap:10px; align-items:center }
+.level .row{ display:grid; grid-template-columns:1fr 1fr; gap:16px }
+.level input[type="text"], .level input[type="number"], .level textarea{
+  width:100%; background:#101010; color:#fff;
+  border:1px solid #3a3a3a; border-radius:10px; padding:12px 14px; font-size:16px;
+}
+.level textarea{ min-height:110px; resize:vertical }
+.level .btn-ghost{ background:transparent; color:#fff; border:1px solid #444; border-radius:12px; padding:10px 12px; font-weight:800 }
+.level .btn-danger{ background:#a80000; color:#fff; border:none; border-radius:12px; padding:10px 12px; font-weight:800 }
+.toolbar{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px }
+.pill{ display:inline-block; padding:8px 12px; border:1px dashed #444; border-radius:999px; color:#bbb; font-size:13px }
+</style>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function qTemplate(idx){
+  const wrap = document.createElement('div');
+  wrap.className = 'level';
+  wrap.innerHTML = `
+    <h3>Вопрос <span class="num">${idx+1}</span>
+      <span class="right">
+        <button type="button" class="btn-ghost up">▲</button>
+        <button type="button" class="btn-ghost down">▼</button>
+        <button type="button" class="btn-danger del">Удалить</button>
+      </span>
+    </h3>
+    <label>Текст вопроса (вверху)</label>
+    <input type="text" class="question" placeholder="Например: Столица Франции?">
+    <div class="row">
+      <div>
+        <label>Правильный ответ (текст или URL)</label>
+        <input type="text" class="correct" placeholder="Париж или https://.../cat.gif">
+      </div>
+      <div>
+        <label>Неправильные (по одному в строке)</label>
+        <textarea class="wrong" placeholder="Марсель\nЛион\nНицца"></textarea>
+      </div>
+    </div>
+  `;
+  wrap.querySelector('.del').onclick  = () => { wrap.remove(); renumber(); };
+  wrap.querySelector('.up').onclick   = () => { const p = wrap.previousElementSibling; if(p){ wrap.parentNode.insertBefore(wrap, p); renumber(); } };
+  wrap.querySelector('.down').onclick = () => { const n = wrap.nextElementSibling; if(n){ wrap.parentNode.insertBefore(n, wrap); renumber(); } };
+  return wrap;
+}
+
+function addQ(){
+  const idx = $$('#levels .level').length;
+  $('#levels').appendChild(qTemplate(idx));
+  renumber();
+}
+
+function renumber(){
+  $$('#levels .level .num').forEach((n,i)=> n.textContent = i+1);
+}
+
+document.getElementById('addQ').addEventListener('click', e => { e.preventDefault(); addQ(); });
+addQ();
+</script>
+
+    <h2 style="margin-top:16px">🚀 Публикация</h2>
+    <div class="row">
+     <button id="saveBtn"  type="button" onclick="window.publish && window.publish()">💾 Сохранить и получить iframe</button>
+<button id="testBtn"  type="button" class="btn-ghost" onclick="window.quickTest && window.quickTest()">🔍 Валидация JSON</button>
+
+<textarea id="iframeOut" placeholder="Здесь появится iframe для вставки"></textarea>
+
+<button id="copyBtn" type="button" class="btn-ghost" onclick="window.copyIframe && window.copyIframe()">📋 Копировать</button>
+
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <img src="kgb-logo.svg" alt="КГБ" onerror="this.onerror=null;this.src='kgb-logo.png'">
+  <span>© 2025</span>
+  <a href="#" title="Корпорация Геймификации Будущего">Корпорация Геймификации Будущего</a>
+</footer>
+
+<script>
+// здесь остаётся твой JS как есть
+</script>
+<script>
+(function(){
+  const item  = document.getElementById('previewItem');
+  const text  = document.getElementById('previewText');
+  const input = document.getElementById('previewValue');
+  const bText = document.getElementById('btnText');
+  const bImg  = document.getElementById('btnImage');
+
+  function setActive(btn){
+    [bText,bImg].forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function setMode(mode){
+    item.setAttribute('data-mode', mode);
+    if(mode==='image'){
+      const v = (input.value||'').trim();
+      item.style.backgroundImage = /^https?:\/\//i.test(v) ? `url("${v}")` : 'none';
+    }else{
+      item.style.backgroundImage = 'none';
+      text.textContent = (input.value||'').trim() || 'Preview';
+    }
+  }
+
+  bText.addEventListener('click', ()=>{ setActive(bText); setMode('text'); });
+  bImg .addEventListener('click', ()=>{ setActive(bImg ); setMode('image'); });
+  input.addEventListener('input', ()=> setMode(item.getAttribute('data-mode')||'text'));
+
+  setActive(bText);
+  setMode('text');
+})();
+</script>
+<script>
+const $  = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+const BASE_MAIN = 'https://kristeachme.github.io/quiz/quiz-main.html';
+
+function collectConfig(){
+  const questions = [];
+  $$('#levels .level').forEach(div => {
+    questions.push({
+      question: (div.querySelector('.question')?.value || '').trim(),
+      correct : (div.querySelector('.correct') ?.value || '').trim(),
+      wrong   : (div.querySelector('.wrong')   ?.value || '').split('\n').map(s=>s.trim()).filter(Boolean)
+    });
+  });
+
+  const answersPerQuestion = parseInt($('#answersPerQuestion')?.value ?? '4', 10);
+  const spawnInterval      = parseInt($('#spawnInterval')?.value      ?? '900', 10);
+  const direction          = $('#direction')?.value ?? 'vertical';
+  const speed              = parseInt($('#speed')?.value ?? '5', 10);
+  const font               = ($('#font')?.value || '').trim();
+  const fontSize           = parseInt($('#fontSize')?.value ?? '24', 10);
+  const textColor          = $('#textColor')?.value || '#ffffff';
+  const cursor             = ($('#cursorUrl')?.value || '').trim();
+
+  return {
+    answersPerQuestion: Math.max(2, Math.min(10, isNaN(answersPerQuestion)?4:answersPerQuestion)),
+    spawnInterval     : Math.max(200, isNaN(spawnInterval)?900:spawnInterval),
+    direction,
+    speed: Math.max(1, Math.min(10, isNaN(speed)?5:speed)),
+    font, fontSize: Math.max(10, isNaN(fontSize)?24:fontSize), textColor, cursor,
+    questions
+  };
+}
+
+function validateConfig(cfg){
+  if (!cfg.questions.length) return 'Добавьте хотя бы один вопрос.';
+  for (let i=0;i<cfg.questions.length;i++){
+    const q = cfg.questions[i];
+    if (!q.question) return `Вопрос ${i+1}: заполните текст вопроса.`;
+    if (!q.correct)  return `Вопрос ${i+1}: укажите правильный ответ.`;
+    if ((q.wrong?.length || 0) + 1 < 2) return `Вопрос ${i+1}: нужен минимум один неправильный (чтобы было ≥ 2 варианта).`;
+  }
+  return null;
+}
+
+function makeId(cfg){
+  const first = (cfg.questions[0]?.question || 'quiz').trim();
+  const slug = first.toLowerCase()
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'quiz';
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  const stamp=`${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  return `${slug}-${stamp}`;
+}
+
+function publish(){
+  const cfg = collectConfig();
+  const err = validateConfig(cfg);
+  if (err){ alert(err); return; }
+
+  const id = makeId(cfg);
+  const jsonStr = JSON.stringify(cfg, null, 2);
+
+  const blob = new Blob([jsonStr], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = id + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+
+  const iframe = `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
+  const out = $('#iframeOut');
+  if (out) out.value = iframe;
+
+  alert('JSON сохранён. Загрузите файл в папку /data вашего репозитория. После загрузки ссылка в iframe заработает.');
+}
+
+function quickTest(){
+  const cfg = collectConfig();
+  const err = validateConfig(cfg);
+  if (err){ alert(err); return; }
+  alert('JSON валиден. Вопросов: ' + cfg.questions.length);
+}
+
+function copyIframe(){
+  const v = $('#iframeOut')?.value?.trim();
+  if (!v){ alert('Сначала получите iframe.'); return; }
+  navigator.clipboard.writeText(v).catch(()=>{});
+}
+
+window.publish    = publish;
+window.quickTest  = quickTest;
+window.copyIframe = copyIframe;
+
+document.addEventListener('DOMContentLoaded', () => {
+  $('#saveBtn')?.addEventListener('click', e => { e.preventDefault(); publish(); });
+  $('#testBtn')?.addEventListener('click', e => { e.preventDefault(); quickTest(); });
+  $('#copyBtn')?.addEventListener('click', e => { e.preventDefault(); copyIframe(); });
+});
+</script>
+
+</body>
+</html>
