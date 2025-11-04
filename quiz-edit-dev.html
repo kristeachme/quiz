@@ -582,35 +582,14 @@ function makeId(cfg){
 function publish(){
   const cfg = collectConfig();
   const err = validateConfig(cfg);
-  if (err){ alert(err); return; }
+  if(err){ alert(err); return; }
 
-  const id = makeId(cfg);
-  const jsonStr = JSON.stringify(cfg, null, 2);
-
-  const blob = new Blob([jsonStr], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = id + '.json';
-  document.body.appendChild(a); a.click(); a.remove();
-
-  const iframe = `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
-  const out = $('#iframeOut');
-  if (out) out.value = iframe;
-
-  alert('JSON сохранён. Загрузите файл в папку /data вашего репозитория. После загрузки ссылка в iframe заработает.');
-}
-
-function quickTest(){
-  const cfg = collectConfig();
-  const err = validateConfig(cfg);
-  if (err){ alert(err); return; }
-  alert('JSON валиден. Вопросов: ' + cfg.questions.length);
-}
-
-function copyIframe(){
-  const v = $('#iframeOut')?.value?.trim();
-  if (!v){ alert('Сначала получите iframe.'); return; }
-  navigator.clipboard.writeText(v).catch(()=>{});
+  const id   = makeId(cfg);
+  const json = JSON.stringify(cfg, null, 2);
+  const iframeCode =
+    `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
+  const out = document.getElementById('iframeOut');
+  if(out) out.value = iframeCode;
 }
 
 window.publish    = publish;
