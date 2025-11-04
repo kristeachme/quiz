@@ -442,11 +442,23 @@ addQ();
 </div>
 </div>
 
-<!-- Публикация -->
-<h2 style="margin-top:14px">🚀 Публикация</h2>
+<h2>🚀 Публикация</h2>
 <div class="row">
-  <button id="saveBtn"  type="button" class="btn"       onclick="window.publish && window.publish()">💾 Сохранить и получить iframe</button>
-  <button id="testBtn"  type="button" class="btn-ghost" onclick="window.quickTest && window.quickTest()">🔍 Валидация JSON</button>
+  <button id="saveBtn" type="button" class="btn">💾 Сохранить и получить iframe</button>
+  <button id="testBtn" type="button" class="btn-ghost">🔍 Валидация JSON</button>
+</div>
+
+<div class="result" style="margin-top:10px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start">
+  <textarea id="iframeOut" readonly placeholder="Здесь появится iframe для вставки"
+            style="height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace"></textarea>
+  <button id="copyBtn" type="button" class="btn-ghost">📋 Копировать</button>
+</div>
+
+
+<div class="result" style="margin-top:10px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start">
+  <textarea id="iframeOut" readonly placeholder="Здесь появится iframe для вставки"
+            style="height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace"></textarea>
+  <button id="copyBtn" type="button" class="btn-ghost">📋 Копировать</button>
 </div>
 
 <textarea id="iframeOut" placeholder="Здесь появится iframe для вставки"></textarea>
@@ -774,6 +786,129 @@ if (inputValue) inputValue.addEventListener('input', updatePreview);
 
   setMode('text');
 })();
+</script>
+<script>
+// === БАЗА: откуда грузится игра ===
+const BASE_MAIN = 'https://kristeachme.github.io/quiz/quiz-main.html'; // страница игры
+
+// === СБОР КОНФИГА из редактора (подгоняй селекторы при необходимости) ===
+function collectConfig(){
+  const get = (sel, def='') => document.querySelector(sel)?.value ?? def;
+
+  const questions = [];
+  document.querySelectorAll('#levels .level').forEach(div=>{
+    questions.push({
+      question: div.querySelector('.question')?.value?.trim() || '',
+      correct:  div.querySelector('.correct')?.value?.trim()  || '',
+      wrong:    (div.querySelector('.wrong')?.value || '')
+                .split('\n').map(s=>s.trim()).filter(Boolean)
+    });
+  });
+
+  return {
+    answersPerQuestion: Math.max(2, Math.min(10, parseInt(get('#answersPerQuestion','4'),10) || 4)),
+    spawnInterval:      Math.max(200, parseInt(get('#spawnInterval','900'),10) || 900),
+    direction:          (document.querySelector('#direction')?.value || 'vertical'),
+
+    shape:        (document.querySelector('#shape')?.value || 'rect'),
+    bgColor:      get('#bgColor','#151515'),
+    bgImage:      get('#bgImage','').trim(),
+    borderOn:     !!document.querySelector('#borderOn')?.checked,
+    borderColor:  get('#borderColor','#ffffff'),
+    borderWidth:  parseInt(get('#borderWidth','1'),10) || 1,
+    shadowOn:     !!document.querySelector('#shadowOn')?.checked,
+    glowOn:       !!document.querySelector('#glowOn')?.checked,
+    glowColor:    get('#glowColor','#00ffff'),
+    alpha:        parseFloat(get('#alpha','1')) || 1,
+    padding:      parseInt(get('#padding','22'),10) || 22,
+
+    font:         (document.querySelector('#font')?.value || 'PT Sans').trim(),
+    fontSize:     parseInt(get('#fontSize','24'),10) || 24,
+    textColor:    get('#textColor','#ffffff'),
+
+    startTitle:   get('#startTitle','').trim(),
+    startButton:  get('#startButton','').trim(),
+    finalText:    get('#finalFeedback','').trim(),
+    roundTimerSec: parseInt(get('#roundTimer','0'),10) || 0,
+
+    globalWrong: (document.querySelector('#globalWrong')?.value || '')
+                 .split('\n').map(s=>s.trim()).filter(Boolean),
+
+    questions
+  };
+}
+
+// === ПРОВЕРКА КОНФИГА ===
+function validateConfig(cfg){
+  if(!cfg?.questions?.length) return 'Добавьте хотя бы один вопрос.';
+  for(let i=0;i<cfg.questions.length;i++){
+    const q = cfg.questions[i];
+    if(!q.question) return `Вопрос ${i+1}: заполните текст вопроса.`;
+    if(!q.correct)  return `Вопрос ${i+1}: укажите правильный ответ.`;
+    if((q.wrong?.length||0) + 1 < 2) return `Вопрос ${i+1}: нужен минимум один неправильный (чтобы было ≥ 2 варианта).`;
+  }
+  return null;
+}
+
+// === ID + timestamp для имени файла ===
+function makeId(cfg){
+  const first = (cfg.questions[0]?.question || 'quiz').trim();
+  const slug = first.toLowerCase()
+     .normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+     .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'quiz';
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  return `${slug}-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
+
+// === ПУБЛИКАЦИЯ ===
+function publish(){
+  const cfg = collectConfig();
+  const err = validateConfig(cfg);
+  if(err){ alert(err); return; }
+
+  const id       = makeId(cfg);
+  const json     = JSON.stringify(cfg, null, 2);
+  const filename = `${id}.json`;
+
+  // 1) Скачать JSON локально
+  const blob = new Blob([json], {type:'application/json'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  // 2) Вывести iframe
+  const iframeCode =
+    `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
+  const out = document.getElementById('iframeOut');
+  if(out) out.value = iframeCode;
+
+  // 3) Подсказка
+  alert(`JSON сохранён как ${filename}.\n\nЗагрузите этот файл в папку /data вашего репозитория (Add file → Upload files → Commit). После загрузки iframe заработает.`);
+}
+
+// === ВАЛИДАЦИЯ ===
+function quickTest(){
+  const cfg = collectConfig();
+  const err = validateConfig(cfg);
+  if(err){ alert(err); return; }
+  alert(`JSON валиден. Вопросов: ${cfg.questions.length}`);
+  console.log(cfg);
+}
+
+// === КОПИРОВАНИЕ iframe ===
+function copyIframe(){
+  const out = document.getElementById('iframeOut');
+  if(!out || !out.value.trim()){ alert('Сначала сгенерируйте iframe.'); return; }
+  navigator.clipboard.writeText(out.value);
+}
+
+// === ПРИВЯЗКА КНОПОК ===
+document.getElementById('saveBtn')?.addEventListener('click', publish);
+document.getElementById('testBtn')?.addEventListener('click', quickTest);
+document.getElementById('copyBtn')?.addEventListener('click', copyIframe);
 </script>
 
 </body>
