@@ -450,10 +450,14 @@ addQ();
 </div>
 
 <div class="result" style="margin-top:10px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start">
-  <textarea id="iframeOut" placeholder="Здесь появится iframe для вставки" style="height:120px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace"></textarea>
-  <button id="copyBtn" type="button" class="btn-ghost">📋 Копировать</button>
+  <textarea id="iframeOut" placeholder="Здесь появится iframe для вставки"></textarea>
+  <button id="copyBtn" class="btn-ghost">📋 Копировать</button>
 </div>
 
+<div class="row" style="margin-top:8px">
+  <button id="saveBtn" class="btn">💾 Сохранить и получить iframe</button>
+  <button id="testBtn" class="btn-ghost">🔍 Валидация JSON</button>
+</div>
 
   </section>
 </main>
@@ -854,45 +858,44 @@ document.getElementById('testBtn')?.addEventListener('click', quickTest);
 document.getElementById('copyBtn')?.addEventListener('click', copyIframe);
 </script>
 
-  <script>
-  // Укажи страницу запуска
-  const BASE_MAIN = 'https://kristeachme.github.io/quiz/quiz-main.html';
+<script>
 
-  function publish(){
-    const cfg = collectConfig();              // твоя функция сборки
-    const err = validateConfig(cfg);          // твоя валидация
-    if (err) { alert(err); return; }
+const BASE_MAIN = 'https://kristeachme.github.io/quiz/quiz-main.html';
 
-    // генерим id (можно оставить твою makeId)
-    const id = makeId(cfg);
+function publish(){
+  const cfg = collectConfig();             
+  const err = validateConfig(cfg);          
+  if (err) { alert(err); return; }
 
-    // готовим iframe и кладём в единственное поле
-    const iframeCode =
-      `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
+  const id = makeId(cfg);                  
+  const iframeCode =
+    `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}"
+             width="900" height="640" style="border:0;"
+             allow="autoplay" allowfullscreen></iframe>`;
 
-    const out = document.getElementById('iframeOut');
-    if (out) out.value = iframeCode;
-  }
+  const out = document.getElementById('iframeOut');
+  if (out) out.value = iframeCode;
+}
 
-  // Валидация «в одно касание» (если есть)
-  function quickTest(){
-    const cfg = collectConfig();
-    const err = validateConfig(cfg);
-    alert(err ? err : 'JSON валиден 👍');
-  }
+function quickTest(){
+  const cfg = collectConfig();
+  const err = validateConfig(cfg);
+  alert(err ? err : 'JSON валиден 👍');
+}
 
-  // Копирование iframe в буфер
-  async function copyIframe(){
-    const v = (document.getElementById('iframeOut')?.value || '').trim();
-    if (!v) { alert('Сначала сгенерируй iframe.'); return; }
-    try { await navigator.clipboard.writeText(v); } catch {}
-  }
+async function copyIframe(){
+  const v = (document.getElementById('iframeOut')?.value || '').trim();
+  if (!v) { alert('Сначала сгенерируй iframe.'); return; }
+  try { await navigator.clipboard.writeText(v); } catch {}
+}
 
-  // Навешиваем обработчики
-  document.getElementById('saveBtn')?.addEventListener('click', publish);
-  document.getElementById('testBtn')?.addEventListener('click', quickTest);
-  document.getElementById('copyBtn')?.addEventListener('click', copyIframe);
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('saveBtn')?.addEventListener('click', e => { e.preventDefault(); publish(); });
+  document.getElementById('testBtn')?.addEventListener('click', e => { e.preventDefault(); quickTest(); });
+  document.getElementById('copyBtn')?.addEventListener('click', e => { e.preventDefault(); copyIframe(); });
+});
 </script>
+
 
 </body>
 </html>
