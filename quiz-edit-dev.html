@@ -657,6 +657,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputValue    = $('#previewValue');
   const btnText       = $('#btnText');
   const btnImage      = $('#btnImage');
+  function applyFontToPreview(fontFamily){
+    if(!fontFamily) return;
+    const id = 'gf-'+fontFamily.replace(/\s+/g,'-').toLowerCase();
+    if(document.getElementById(id)) return;
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family='
+                + encodeURIComponent(fontFamily)
+                + ':wght@400;700;800&display=swap';
+    document.head.appendChild(link);
+  }
+
 
   function setMode(mode) {
     preview.dataset.mode = mode; // text | image
@@ -678,19 +691,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const mode       = preview.dataset.mode || 'text';
     const value      = (inputValue?.value || '').trim();
 
-    const shape      = $('#shape')?.value || 'rect';
-    const bgColor    = $('#bgColor')?.value || '#151515';
-    const bgImage    = ($('#bgImage')?.value || '').trim();
-    const alpha      = parseFloat($('#alpha')?.value || '1') || 1;
-    const padding    = parseInt($('#padding')?.value || '22', 10);
-    const borderOn   = !!$('#borderOn')?.checked;
-    const borderCol  = $('#borderColor')?.value || '#ffffff';
-    const borderW    = parseInt($('#borderWidth')?.value || '1', 10);
-    const shadowOn   = !!$('#shadowOn')?.checked;
-    const glowOn     = !!$('#glowOn')?.checked;
-    const glowColor  = $('#glowColor')?.value || '#00ffff';
+const shapeRaw   = $('#shape')?.value || 'rect';
+const shapeMap   = {
+  'Прямоугольник':'rect', 'rect':'rect',
+  'Скруглённый':'rounded','round':'rounded','rounded':'rounded',
+  'Круг':'circle','circle':'circle',
+  'Ромб':'diamond','diamond':'diamond',
+  'Звезда':'star','star':'star'
+};
+const shape      = shapeMap[shapeRaw] || 'rect';
 
-    const fontFam    = ($('#font')?.value || 'PT Sans').replace(/"/g,'');
+const bgColor    = $('#bgColor')?.value || '#151515';
+...
+const fontFam    = ($('#font')?.value || 'PT Sans').trim().replace(/"/g,'');
+applyFontToPreview(fontFam);
+
     const fontSize   = parseInt($('#fontSize')?.value || '24', 10);
     const textColor  = $('#textColor')?.value || '#ffffff';
 
