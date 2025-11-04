@@ -687,77 +687,89 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function updatePreview() {
-    const mode       = preview.dataset.mode || 'text';
-    const value      = (inputValue?.value || '').trim();
+ function updatePreview() {
+  const mode       = preview.dataset.mode || 'text';
+  const value      = (inputValue?.value || '').trim();
 
-const shapeRaw   = $('#shape')?.value || 'rect';
-const shapeMap   = {
-  'Прямоугольник':'rect', 'rect':'rect',
-  'Скруглённый':'rounded','round':'rounded','rounded':'rounded',
-  'Круг':'circle','circle':'circle',
-  'Ромб':'diamond','diamond':'diamond',
-  'Звезда':'star','star':'star'
-};
-const shape      = shapeMap[shapeRaw] || 'rect';
+  // --- shape (учитываем русские подписи и "чистые" значения)
+  const shapeRaw   = $('#shape')?.value || 'rect';
+  const shapeMap   = {
+    'Прямоугольник':'rect',    'rect':'rect',
+    'Скруглённый':'rounded',   'round':'rounded','rounded':'rounded',
+    'Круг':'circle',           'circle':'circle',
+    'Ромб':'diamond',          'diamond':'diamond',
+    'Звезда':'star',           'star':'star'
+  };
+  const shape      = shapeMap[shapeRaw] || 'rect';
 
-const bgColor    = $('#bgColor')?.value || '#151515';
-...
-const fontFam    = ($('#font')?.value || 'PT Sans').trim().replace(/"/g,'');
-applyFontToPreview(fontFam);
+  const bgColor    = $('#bgColor')?.value || '#151515';
+  const bgImage    = ($('#bgImage')?.value || '').trim();
+  const alpha      = parseFloat($('#alpha')?.value || '1') || 1;
+  const padding    = parseInt($('#padding')?.value || '22', 10);
+  const borderOn   = !!$('#borderOn')?.checked;
+  const borderCol  = $('#borderColor')?.value || '#ffffff';
+  const borderW    = parseInt($('#borderWidth')?.value || '1', 10);
+  const shadowOn   = !!$('#shadowOn')?.checked;
+  const glowOn     = !!$('#glowOn')?.checked;
+  const glowColor  = $('#glowColor')?.value || '#00ffff';
 
-    const fontSize   = parseInt($('#fontSize')?.value || '24', 10);
-    const textColor  = $('#textColor')?.value || '#ffffff';
+  const fontFam    = ($('#font')?.value || 'PT Sans').trim().replace(/"/g,'');
+  applyFontToPreview(fontFam);  // загружаем шрифт для предпросмотра
 
-    const { borderRadius, clip } = shapeToClip(shape);
+  const fontSize   = parseInt($('#fontSize')?.value || '24', 10);
+  const textColor  = $('#textColor')?.value || '#ffffff';
 
-    preview.style.borderRadius = borderRadius;
-    preview.style.clipPath     = clip;
-    preview.style.padding      = padding + 'px';
-    preview.style.opacity      = String(alpha);
+  const { borderRadius, clip } = shapeToClip(shape);
 
-    if (bgImage && mode === 'image') {
-      preview.style.background = `center/contain no-repeat url("${bgImage}")`;
-      preview.style.backgroundColor = 'transparent';
-    } else {
-      preview.style.background = 'none';
-      preview.style.backgroundColor = bgColor;
-    }
+  // базовый контейнер предпросмотра
+  preview.style.borderRadius = borderRadius;
+  preview.style.clipPath     = clip;
+  preview.style.padding      = padding + 'px';
+  preview.style.opacity      = String(alpha);
 
-    preview.style.border = borderOn ? `${borderW}px solid ${borderCol}` : 'none';
-
-    const baseShadow = shadowOn ? '0 10px 24px rgba(0,0,0,.35)' : 'none';
-    const glowShadow = glowOn ? `0 0 16px ${glowColor}, 0 0 28px ${glowColor}55` : '';
-    preview.style.boxShadow = [baseShadow, glowShadow].filter(Boolean).join(', ');
-
-    if (mode === 'image') {
-      previewTextEl.style.display = 'none';
-      if (value) {
-        preview.style.background = `center/contain no-repeat url("${value}")`;
-        preview.style.backgroundColor = 'transparent';
-      }
-    } else {
-      previewTextEl.style.display = '';
-      previewTextEl.textContent   = value || 'Preview';
-      previewTextEl.style.fontFamily = `"${fontFam}", system-ui, sans-serif`;
-      previewTextEl.style.fontSize   = fontSize + 'px';
-      previewTextEl.style.color      = textColor;
-    }
+  if (bgImage && mode === 'image') {
+    preview.style.background = `center/contain no-repeat url("${bgImage}")`;
+    preview.style.backgroundColor = 'transparent';
+  } else {
+    preview.style.background = 'none';
+    preview.style.backgroundColor = bgColor;
   }
 
-  if (btnText)  btnText .addEventListener('click', () => setMode('text'));
-  if (btnImage) btnImage.addEventListener('click', () => setMode('image'));
-  if (inputValue) inputValue.addEventListener('input', updatePreview);
+  preview.style.border = borderOn ? `${borderW}px solid ${borderCol}` : 'none';
 
-  // Любое поле редактора обновляет предпросмотр
-  ['body','main','#editor'].forEach(rootSel=>{
-    const root = document.querySelector(rootSel);
-    if(!root) return;
-    root.querySelectorAll('input, select, textarea').forEach(el=>{
-      el.addEventListener('input',  updatePreview);
-      el.addEventListener('change', updatePreview);
-    });
+  const baseShadow = shadowOn ? '0 10px 24px rgba(0,0,0,.35)' : 'none';
+  const glowShadow = glowOn ? `0 0 16px ${glowColor}, 0 0 28px ${glowColor}55` : '';
+  preview.style.boxShadow = [baseShadow, glowShadow].filter(Boolean).join(', ');
+
+  // содержимое
+  if (mode === 'image') {
+    previewTextEl.style.display = 'none';
+    if (value) {
+      preview.style.background = `center/contain no-repeat url("${value}")`;
+      preview.style.backgroundColor = 'transparent';
+    }
+  } else {
+    previewTextEl.style.display = '';
+    previewTextEl.textContent      = value || 'Preview';
+    previewTextEl.style.fontFamily = `"${fontFam}", system-ui, sans-serif`;
+    previewTextEl.style.fontSize   = fontSize + 'px';
+    previewTextEl.style.color      = textColor;
+  }
+}
+
+if (btnText)  btnText .addEventListener('click', () => setMode('text'));
+if (btnImage) btnImage.addEventListener('click', () => setMode('image'));
+if (inputValue) inputValue.addEventListener('input', updatePreview);
+
+// любое поле редактора обновляет предпросмотр
+['body','main','#editor'].forEach(rootSel=>{
+  const root = document.querySelector(rootSel);
+  if(!root) return;
+  root.querySelectorAll('input, select, textarea').forEach(el=>{
+    el.addEventListener('input',  updatePreview);
+    el.addEventListener('change', updatePreview);
   });
+});
 
   setMode('text');
 })();
