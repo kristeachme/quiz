@@ -1,0 +1,35 @@
+{
+  "answersPerQuestion": 4,
+  "spawnInterval": 900,
+  "direction": "vertical",
+  "shape": "rect",
+  "bgColor": "#151515",
+  "bgImage": "",
+  "borderOn": true,
+  "borderColor": "#ffffff",
+  "borderWidth": 1,
+  "shadowOn": true,
+  "glowOn": false,
+  "glowColor": "#00ffff",
+  "alpha": 1,
+  "padding": 22,
+  "font": "PT Sans",
+  "fontSize": 24,
+  "textColor": "#ffffff",
+  "startTitle": "",
+  "startButton": "",
+  "finalText": "",
+  "roundTimerSec": 0,
+  "globalWrong": [],
+  "questions": [
+    {
+      "question": "ап",
+      "correct": "п",
+      "wrong": [
+        "рп",
+        "р",
+        "р"
+      ]
+    }
+  ]
+}
