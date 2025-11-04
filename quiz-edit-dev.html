@@ -570,31 +570,6 @@ function collectConfig(){
     questions: collect()
   };
 
-  return cfg;
-}
-
-  const answersPerQuestion=Math.max(2,Math.min(10,parseInt($('#answersPerQuestion')?.value||'4',10)));
-  const spawnInterval=Math.max(200,parseInt($('#spawnInterval')?.value||'900',10));
-  const direction=$('#direction')?.value||'vertical';
-  const speed=Math.max(1,Math.min(10,parseInt($('#speed')?.value||'5',10)));
-  const font=($('#font')?.value||'').trim();
-  const fontSize=Math.max(10,parseInt($('#fontSize')?.value||'24',10));
-  const textColor=$('#textColor')?.value||'#ffffff';
-  const cursor=($('#cursorUrl')?.value||'').trim();
-
-  const startTitle   = ($('#startTitle')  ?.value||'').trim();
-  const startButton  = ($('#startButton') ?.value||'').trim();
-  const finalFeedback= ($('#finalFeedback')?.value||'').trim();
-
-  return {
-    answersPerQuestion, spawnInterval, direction, speed,
-    font, fontSize, textColor, cursor,
-    startTitle, startButton, finalFeedback,   /* ← добавлено */
-    questions
-  };
-}
-
-
 function validateConfig(cfg){
   if (!cfg.questions.length) return 'Добавьте хотя бы один вопрос.';
   for (let i=0;i<cfg.questions.length;i++){
