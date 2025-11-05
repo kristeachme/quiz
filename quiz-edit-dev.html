@@ -641,12 +641,12 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
       finalText:     get('#finalText','').trim(),
       roundTimerSec: parseInt(get('#roundTime','0'), 10) || 0,
 
-      globalWrong: (document.querySelector('#globalWrong')?.value || '')
-                   .split('\n').map(s => s.trim()).filter(Boolean),
-
-      questions
-    };
-  }
+    globalWrong: (() => {
+  const el = document.querySelector('#globalWrong');
+  if (!el) return [];
+  return el.value.split('\n').map(s => s.trim()).filter(Boolean);
+})(),
+}; 
 
   // === Валидация конфигурации ===
   function validateConfig(cfg){
@@ -655,87 +655,91 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
       const q = cfg.questions[i];
       if (!q.question) return `Вопрос ${i+1}: заполните текст вопроса.`;
       if (!q.correct)  return `Вопрос ${i+1}: укажите правильный ответ.`;
-      if ((q.wrong?.length || 0) + 1 < 2) return `Вопрос ${i+1}: нужен минимум один неправильный (чтобы было ≥ 2 варианта).`;
+      if ((q.wrong?.length ?? 0) < 1)
+  return `Вопрос ${i+1}: нужен минимум один неправильный (чтобы было ≥ 2 варианта).`;
     }
     return null;
   }
 
-  // === Публикация: генерация iframe с cfg-параметром ===
+// === Публикация: генерация iframe с cfg-параметром ===
 const BASE_MAIN = 'https://kristeachme.github.io/quiz/quiz-main.html';
 const ENDPOINT    = "https://server-kjnn.onrender.com/publish";
 const PUBLISH_KEY = "nika_read_pub_2025";
 
-async function publish(){
- const cfg = collectConfig();
-console.log('CFG:', cfg); // отладка
+async function publish() {
+  const cfg = collectConfig();
+  console.log('CFG:', cfg); // отладка
 
-const err = validateConfig(cfg);
-if (err) {
-  alert(err);
-  return;
-}
-
-const id = makeId(cfg);
-const json = JSON.stringify(cfg, null, 2);
-
-try {
-  const res = await fetch(ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      key: PUBLISH_KEY,
-      repo: "kristeachme/quiz", // ← твой репозиторий
-      path: `data/${id}.json`,  // JSON сохраняется сюда
-      value: json
-    })
-  });
-  const text = await res.text();
-console.log("Ответ сервера:", res.status, text);
-
-if (!res.ok) {
-  alert("Ошибка публикации:\n" + res.status + "\n" + text);
-  return;
-}
-  // === Генерация iframe ===
-  const iframe = `<iframe src="https://kristeachme.github.io/quiz-main.html?id=${id}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
-  document.getElementById('iframeOut').value = iframe;
-
-} catch (e) {
-  alert("Ошибка при сохранении:\n" + e.message);
-}
-}
-
-  // === Быстрая проверка JSON ===
-  function quickTest(){
-    const cfg = collectConfig();
-    const err = validateConfig(cfg);
-    if(err){ alert(err); return; }
-    alert(`JSON валиден. Вопросов: ${cfg.questions.length}`);
-    console.log(cfg);
+  const err = validateConfig(cfg);
+  if (err) {
+    alert(err);
+    return;
   }
+
+  const id = makeId(cfg);
+  const json = JSON.stringify(cfg, null, 2);
+
+  try {
+    const res = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        key: PUBLISH_KEY,
+        repo: "kristeachme/quiz", // ← твой репозиторий
+        path: `data/${id}.json`,  // JSON сохраняется сюда
+        value: json
+      })
+    });
+
+    const text = await res.text();
+    console.log("Ответ сервера:", res.status, text);
+
+    if (!res.ok) {
+      alert("Ошибка публикации:\n" + res.status + "\n" + text);
+      return;
+    }
+
+    // === Генерация iframe ===
+    const iframe = `<iframe src="${BASE_MAIN}?id=${id}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
+    document.getElementById('iframeOut').value = iframe;
+
+  } catch (e) {
+    alert("Ошибка при сохранении:\n" + e.message);
+  }
+}
+
+// === Быстрая проверка JSON ===
+function quickTest() {
+  const cfg = collectConfig();
+  const err = validateConfig(cfg);
+  if (err) { alert(err); return; }
+  alert(`JSON валиден. Вопросов: ${cfg.questions.length}`);
+  console.log(cfg);
+}
+
+// === Генерация уникального ID ===
 function makeId(cfg) {
   const hash = btoa(JSON.stringify(cfg)).slice(0, 12);
   return "q_" + hash;
 }
 
-  // === Копирование iframe в буфер обмена ===
-  function copyIframe(){
-    const out = document.getElementById('iframeOut');
-    if(!out || !out.value.trim()){ 
-      alert('Сначала сгенерируйте iframe.'); 
-      return;
-    }
-    navigator.clipboard.writeText(out.value);
+// === Копирование iframe в буфер обмена ===
+function copyIframe() {
+  const out = document.getElementById('iframeOut');
+  if (!out || !out.value.trim()) {
+    alert('Сначала сгенерируйте iframe.');
+    return;
   }
+  navigator.clipboard.writeText(out.value);
+}
 
- // === Привязка кнопок к действиям ===
+// === Привязка кнопок к действиям ===
 document.getElementById('saveBtn')?.addEventListener('click', e => {
   e.preventDefault();
   publish();
 });
 document.getElementById('testBtn')?.addEventListener('click', quickTest);
 document.getElementById('copyBtn')?.addEventListener('click', copyIframe);
-
 </script>
 </body>
 </html>
