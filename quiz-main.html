@@ -43,6 +43,31 @@ const params   = new URLSearchParams(location.search);
 const GAME_ID  = params.get('id');
 const CFG_B64  = params.get('cfg'); // <-- новое
 const JSON_BASE = (location.origin + location.pathname).replace(/[^\/]+$/,'') + 'data/';
+  (async function boot(){
+  try {
+    if (CFG_B64) {
+      // Новый способ — конфиг закодирован прямо в URL
+      try { CFG = JSON.parse(atob(CFG_B64)); }
+      catch { CFG = JSON.parse(decodeURIComponent(escape(atob(CFG_B64)))); }
+    } else if (GAME_ID) {
+      // Старый способ — загружаем JSON-файл
+      const url = `${JSON_BASE}${encodeURIComponent(GAME_ID)}.json?v=${Date.now()}`;
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      CFG = await res.json();
+    } else {
+      throw new Error('Не передан ?id или ?cfg');
+    }
+  } catch(e) {
+    fatal("Не удалось загрузить конфиг: " + e.message);
+    return;
+  }
+
+  applyTypography();
+  applyCursor();
+  startOverlay();
+})();
+
 
 let CFG=null;
 let running=false, spawner=null, qIndex=-1, answered=0;
@@ -91,26 +116,6 @@ function fatal(msg){
   o.innerHTML=`<div class="panel"><h2>Ошибка</h2><p style="white-space:pre-wrap">${msg}</p></div>`;
   document.body.appendChild(o);
 }
-
-(async function boot(){
-  try{
-    if (CFG_B64) {
-      // сначала пробуем plain atob, потом с utf-8 декодом
-      try { CFG = JSON.parse(atob(CFG_B64)); }
-      catch { CFG = JSON.parse(decodeURIComponent(escape(atob(CFG_B64)))); }
-    } else if (GAME_ID) {
-      const url = `${JSON_BASE}${encodeURIComponent(GAME_ID)}.json?v=${Date.now()}`;
-      const res = await fetch(url, {cache:'no-store'}); if(!res.ok) throw new Error('HTTP '+res.status);
-      CFG = await res.json();
-    } else {
-      throw new Error('Не передан ?id или ?cfg');
-    }
-  }catch(e){ fatal("Не удалось загрузить конфиг: "+e.message); return; }
-
-  applyTypography();
-  applyCursor();
-  startOverlay();
-})();
 
 function startOverlay(){
   const ov=document.createElement('div'); ov.className='overlay';
