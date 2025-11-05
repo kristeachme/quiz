@@ -670,12 +670,15 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
     return `${slug}-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
   }
 
-  // === Публикация: сохранение JSON и вывод iframe ===
-  const BASE_MAIN = 'https://kristeachme.github.io/quiz/quiz-main.html';
-  function publish(){
-    const cfg = collectConfig();
-    const err = validateConfig(cfg);
-    if(err){ alert(err); return; }
+ // публикация → Render → GitHub (репо texts/data)
+    const ENDPOINT    = "https://server-kjnn.onrender.com/publish";
+    const PUBLISH_KEY = "nika_read_pub_2025";
+    const BASE_MAIN   = "https://kristeachme.github.io/quiz/quiz-main.html";
+
+    async function publish(){
+      const cfg = collectConfig();
+      const err = validate(cfg);
+      if(err){ alert(err); return; }
 
     const id       = makeId(cfg);
     const json     = JSON.stringify(cfg, null, 2);
