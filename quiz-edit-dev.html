@@ -676,33 +676,26 @@ async function publish(){
   const id   = makeId(cfg);
   const json = JSON.stringify(cfg, null, 2);
 
-  try {
-    const res = await fetch(ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        key:   PUBLISH_KEY,
-        repo:  "kristeachme/quiz",       // 🔁 ← твой GitHub репозиторий
-        path:  `data/${id}.json`,        // JSON сохраняется сюда
-        value: json
-      })
-    });
+ try {
+  const res = await fetch(ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      key: PUBLISH_KEY,
+      repo: "kristeachme/quiz",            // ← твой GitHub репозиторий
+      path: `data/${id}.json`,             // JSON сохраняется сюда
+      value: json
+    })
+  });
 
-    const out = document.getElementById("iframeOut");
-    if (res.ok) {
-      const iframeCode =
-        `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
-      if (out) out.value = iframeCode;
-      alert("✅ Конфигурация сохранена на GitHub и iframe готов!");
-    } else {
-      const msg = await res.text();
-      alert("❌ Ошибка при публикации:\n\n" + msg);
-    }
-  } catch (e) {
-    alert("⚠️ Ошибка соединения:\n" + e.message);
-  }
+  // === Генерация iframe ===
+  const iframeCode = `<iframe src="https://kristeachme.github.io/quiz/quiz-main.html?id=${id}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
+  document.getElementById('iframeOut').value = iframeCode;
+
+} catch (e) {
+  alert("Ошибка при сохранении:\n" + e.message);
 }
-
+}
 
   // === Быстрая проверка JSON ===
   function quickTest(){
