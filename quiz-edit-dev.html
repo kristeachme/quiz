@@ -669,6 +669,7 @@ async function publish(){
   alert('Кнопка работает, publish вызвана!');   // ← ВСТАВЬ СЮДА
 
   const cfg = collectConfig();
+  console.log('CFG:', cfg);   // ← добавь эту строку
   const err = validateConfig(cfg);
   if (err) { alert(err); return; }
 
