@@ -662,18 +662,45 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
 
   // === Публикация: генерация iframe с cfg-параметром ===
   const BASE_MAIN = 'https://kristeachme.github.io/quiz/quiz-main.html';
-  function publish(){
-    const cfg = collectConfig();
-    const err = validateConfig(cfg);
-    if(err){ alert(err); return; }
+const ENDPOINT    = "https://server-kjnn.onrender.com/publish";
+const PUBLISH_KEY = "nika_read_pub_2025";
+const BASE_MAIN   = "https://kristeachme.github.io/quiz/quiz-main.html";
 
-    // Сгенерировать код iframe с cfg-параметром (JSON → base64)
-    const json = JSON.stringify(cfg);
-    const base64cfg = btoa(unescape(encodeURIComponent(json)));
-    const iframeCode = `<iframe src="${BASE_MAIN}?cfg=${base64cfg}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
-    const out = document.getElementById('iframeOut');
-    if (out) out.value = iframeCode;
+async function publish(){
+  const cfg = collectConfig();  
+  const err = validateConfig(cfg);
+  if (err) { alert(err); return; }
+
+  const id   = makeId(cfg);  
+  const json = JSON.stringify(cfg, null, 2);
+
+  try {
+    const res = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        key:   PUBLISH_KEY,
+        repo:  "kristeachme/quiz",       // 🔁 ← твой GitHub репозиторий
+        path:  `data/${id}.json`,        // JSON сохраняется сюда
+        value: json
+      })
+    });
+
+    const out = document.getElementById("iframeOut");
+    if (res.ok) {
+      const iframeCode =
+        `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
+      if (out) out.value = iframeCode;
+      alert("✅ Конфигурация сохранена на GitHub и iframe готов!");
+    } else {
+      const msg = await res.text();
+      alert("❌ Ошибка при публикации:\n\n" + msg);
+    }
+  } catch (e) {
+    alert("⚠️ Ошибка соединения:\n" + e.message);
   }
+}
+
 
   // === Быстрая проверка JSON ===
   function quickTest(){
@@ -694,10 +721,14 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
     navigator.clipboard.writeText(out.value);
   }
 
-  // === Привязка кнопок к действиям ===
-  document.getElementById('saveBtn')?.addEventListener('click', publish);
-  document.getElementById('testBtn')?.addEventListener('click', quickTest);
-  document.getElementById('copyBtn')?.addEventListener('click', copyIframe);
+ // === Привязка кнопок к действиям ===
+document.getElementById('saveBtn')?.addEventListener('click', e => {
+  e.preventDefault();
+  publish();
+});
+document.getElementById('testBtn')?.addEventListener('click', quickTest);
+document.getElementById('copyBtn')?.addEventListener('click', copyIframe);
+
 </script>
 </body>
 </html>
