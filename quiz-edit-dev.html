@@ -660,46 +660,19 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
     return null;
   }
 
-  // === Генерация ID + timestamp для имени файла JSON ===
-  function makeId(cfg){
-    const first = (cfg.questions[0]?.question || 'quiz').trim();
-    const slug = first.toLowerCase()
-       .normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
-       .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'quiz';
-    const d = new Date(), p = n => String(n).padStart(2,'0');
-    return `${slug}-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
-  }
+  // === Публикация: генерация iframe с cfg-параметром ===
+  const BASE_MAIN = 'https://kristeachme.github.io/quiz/quiz-main.html';
+  function publish(){
+    const cfg = collectConfig();
+    const err = validateConfig(cfg);
+    if(err){ alert(err); return; }
 
- // публикация → Render → GitHub (репо texts/data)
-    const ENDPOINT    = "https://server-kjnn.onrender.com/publish";
-    const PUBLISH_KEY = "nika_read_pub_2025";
-    const BASE_MAIN   = "https://kristeachme.github.io/quiz/quiz-main.html";
-
-    async function publish(){
-      const cfg = collectConfig();
-      const err = validate(cfg);
-      if(err){ alert(err); return; }
-
-    const id       = makeId(cfg);
-    const json     = JSON.stringify(cfg, null, 2);
-    const filename = `${id}.json`;
-
-    // 1) Сохранить конфиг JSON локально
-    const blob = new Blob([json], {type:'application/json'});
-    const a    = document.createElement('a');
-    a.href     = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    // 2) Сгенерировать код iframe
-    const iframeCode = `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
+    // Сгенерировать код iframe с cfg-параметром (JSON → base64)
+    const json = JSON.stringify(cfg);
+    const base64cfg = btoa(unescape(encodeURIComponent(json)));
+    const iframeCode = `<iframe src="${BASE_MAIN}?cfg=${base64cfg}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
     const out = document.getElementById('iframeOut');
     if (out) out.value = iframeCode;
-
-    // 3) Подсказка об отправке файла
-    alert(`JSON сохранён как ${filename}.\n\nЗагрузите этот файл в папку /data вашего репозитория (Add file → Upload files → Commit). После загрузки iframe заработает.`);
   }
 
   // === Быстрая проверка JSON ===
