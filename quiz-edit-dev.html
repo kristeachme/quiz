@@ -713,6 +713,10 @@ if (!res.ok) {
     alert(`JSON валиден. Вопросов: ${cfg.questions.length}`);
     console.log(cfg);
   }
+function makeId(cfg) {
+  const hash = btoa(JSON.stringify(cfg)).slice(0, 12);
+  return "q_" + hash;
+}
 
   // === Копирование iframe в буфер обмена ===
   function copyIframe(){
