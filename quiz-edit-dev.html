@@ -579,24 +579,21 @@ function makeId(cfg){
   return `${slug}-${stamp}`;
 }
 
-function publish(){
+function publish() {
   const cfg = collectConfig();
   const err = validateConfig(cfg);
-  if(err){ alert(err); return; }
+  if (err) { alert(err); return; }
 
-  const id   = makeId(cfg);
-  const json = JSON.stringify(cfg, null, 2);   // ← есть уже
-  // ↓ ДОБАВЬТЕ этот блок сохранения файла
-  const blob = new Blob([json], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = id + '.json';
-  a.click();
+  // Преобразуем конфигурацию в base64, чтобы передать прямо в iframe
+  const json   = JSON.stringify(cfg);
+  const cfgB64 = btoa(unescape(encodeURIComponent(json)));
 
+  // Генерируем iframe без сохранения файла
   const iframeCode =
-    `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
+    `<iframe src="${BASE_MAIN}?cfg=${cfgB64}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
+
   const out = document.getElementById('iframeOut');
-  if(out) out.value = iframeCode;
+  if (out) out.value = iframeCode;
 }
 
 window.publish    = publish;
