@@ -39,38 +39,36 @@
   <audio id="winSound" src="win.mp3" preload="auto"></audio>
 
 <script>
-const params   = new URLSearchParams(location.search);
-const GAME_ID  = params.get('id');
-const CFG_B64  = params.get('cfg'); // <-- новое
-const JSON_BASE = (location.origin + location.pathname).replace(/[^\/]+$/,'') + 'data/';
-  (async function boot(){
-  try {
-    if (CFG_B64) {
-      // Новый способ — конфиг закодирован прямо в URL
-      try { CFG = JSON.parse(atob(CFG_B64)); }
-      catch { CFG = JSON.parse(decodeURIComponent(escape(atob(CFG_B64)))); }
-    } else if (GAME_ID) {
-      // Старый способ — загружаем JSON-файл
-      const url = `${JSON_BASE}${encodeURIComponent(GAME_ID)}.json?v=${Date.now()}`;
-      const res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      CFG = await res.json();
-    } else {
-      throw new Error('Не передан ?id или ?cfg');
-    }
-  } catch(e) {
-    fatal("Не удалось загрузить конфиг: " + e.message);
-    return;
-  }
+/* ===================== Загрузка cfg по id ===================== */
+    const params = new URLSearchParams(location.search);
+    const GAME_ID = params.get('id');                           // старая логика сохранена
+    const JSON_BASE = "https://nikashum93.github.io/texts/data/"; // оставляем как было
+
+    let cfg = null;
+    let LANG = 'ru'; // по умолчанию
+
+    (async function boot(){
+      if(!GAME_ID){
+        showFatal("No id", "Не передан id в строке запроса.");
+        return;
+      }
+      try{
+        const url = ${JSON_BASE}${encodeURIComponent(GAME_ID)}.json?v=${Date.now()};
+        const res = await fetch(url, { cache:'no-store' });
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        cfg = await res.json();
+      }catch(e){
+        showFatal("Load error", Ошибка загрузки настроек: ${e.message}\nПроверь публикацию в texts/data.);
+        return;
+      }
+
+    LANG = (cfg.language || 'ru').toLowerCase();
 
   applyTypography();
   applyCursor();
   startOverlay();
 })();
 
-
-let CFG=null;
-let running=false, spawner=null, qIndex=-1, answered=0;
 
 const game = document.getElementById('game');
 const hudQ = document.getElementById('hudQ');
