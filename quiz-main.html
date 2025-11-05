@@ -39,8 +39,9 @@
   <audio id="winSound" src="win.mp3" preload="auto"></audio>
 
 <script>
-const params = new URLSearchParams(location.search);
-const GAME_ID = params.get('id');
+const params   = new URLSearchParams(location.search);
+const GAME_ID  = params.get('id');
+const CFG_B64  = params.get('cfg'); // <-- новое
 const JSON_BASE = (location.origin + location.pathname).replace(/[^\/]+$/,'') + 'data/';
 
 let CFG=null;
@@ -92,12 +93,20 @@ function fatal(msg){
 }
 
 (async function boot(){
-  if(!GAME_ID){ fatal("Не передан ?id"); return; }
   try{
-    const url = `${JSON_BASE}${encodeURIComponent(GAME_ID)}.json?v=${Date.now()}`;
-    const res = await fetch(url, {cache:'no-store'}); if(!res.ok) throw new Error('HTTP '+res.status);
-    CFG = await res.json();
+    if (CFG_B64) {
+      // сначала пробуем plain atob, потом с utf-8 декодом
+      try { CFG = JSON.parse(atob(CFG_B64)); }
+      catch { CFG = JSON.parse(decodeURIComponent(escape(atob(CFG_B64)))); }
+    } else if (GAME_ID) {
+      const url = `${JSON_BASE}${encodeURIComponent(GAME_ID)}.json?v=${Date.now()}`;
+      const res = await fetch(url, {cache:'no-store'}); if(!res.ok) throw new Error('HTTP '+res.status);
+      CFG = await res.json();
+    } else {
+      throw new Error('Не передан ?id или ?cfg');
+    }
   }catch(e){ fatal("Не удалось загрузить конфиг: "+e.message); return; }
+
   applyTypography();
   applyCursor();
   startOverlay();
