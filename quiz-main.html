@@ -40,35 +40,40 @@
 
 <script>
 /* ===================== Загрузка cfg по id ===================== */
-    const params = new URLSearchParams(location.search);
-    const GAME_ID = params.get('id');                           // старая логика сохранена
-    const JSON_BASE = "https://nikashum93.github.io/texts/data/"; // оставляем как было
+const params = new URLSearchParams(location.search);
+const GAME_ID = params.get('id');
+const JSON_BASE = "https://kristeachme.github.io/quiz/data/";
 
-    let cfg = null;
-    let LANG = 'ru'; // по умолчанию
+let cfg = null;
+let LANG = 'ru';
 
-    (async function boot(){
-      if(!GAME_ID){
-        showFatal("No id", "Не передан id в строке запроса.");
-        return;
-      }
-      try{
-        const url = ${JSON_BASE}${encodeURIComponent(GAME_ID)}.json?v=${Date.now()};
-        const res = await fetch(url, { cache:'no-store' });
-        if(!res.ok) throw new Error('HTTP '+res.status);
-        cfg = await res.json();
-      }catch(e){
-        showFatal("Load error", Ошибка загрузки настроек: ${e.message}\nПроверь публикацию в texts/data.);
-        return;
-      }
+(async function boot(){
+  if (!GAME_ID) {
+    showFatal("Нет ID", "В ссылке не указан параметр ?id=...");
+    return;
+  }
 
-    LANG = (cfg.language || 'ru').toLowerCase();
+  try {
+    const url = `${JSON_BASE}${encodeURIComponent(GAME_ID)}.json?v=${Date.now()}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    cfg = await res.json();
+  } catch (e) {
+    showFatal("Ошибка загрузки", `Ошибка загрузки настроек:\n${e.message}\nПроверь, загружен ли JSON в /data/`);
+    return;
+  }
 
+  LANG = (cfg.language || 'ru').toLowerCase();
+
+  // ✅ Теперь можно запускать оформление и игру:
   applyTypography();
   applyCursor();
   startOverlay();
-})();
 
+  // инициализация игры, если нужно:
+  // initGame(cfg);
+})();
+</script>
 
 const game = document.getElementById('game');
 const hudQ = document.getElementById('hudQ');
