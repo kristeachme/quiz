@@ -689,8 +689,8 @@ async function publish(){
   });
 
   // === Генерация iframe ===
-  const iframe = `<iframe src="https://kristeachme.github.io/quiz-main.html?id=${id}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
-  document.getElementById('iframeOut').value = iframe;
+const iframe = `<iframe src="https://kristeachme.github.io/quiz-main.html?id=${id}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
+document.getElementById('iframeOut').value = iframe;
 
 } catch (e) {
   alert("Ошибка при сохранении:\n" + e.message);
