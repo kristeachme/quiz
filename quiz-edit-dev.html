@@ -438,18 +438,17 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
       </div>
     </div>
 
-    <h2 style="margin-top:14px">🚀 Публикация</h2>
+    <!-- Раздел публикации (как в редакторе edit28) -->
+<h2 style="margin-top:14px">🚀 Публикация</h2>
+<div class="row">
+  <button id="saveBtn" type="button" class="btn">💾 Сохранить и получить iframe</button>
+  <button id="testBtn" type="button" class="btn-ghost">🔍 Валидация JSON</button>
+</div>
 
-    <div class="row">
-      <button id="saveBtn" type="button" class="btn">💾 Сохранить и получить iframe</button>
-      <button id="testBtn" type="button" class="btn-ghost">🔍 Валидация JSON</button>
-    </div>
-
-    <div class="result" style="margin-top:10px; display:grid; grid-template-columns:1fr auto; gap:12px; align-items:start">
-      <textarea id="iframeOut" placeholder="Здесь появится iframe для вставки"></textarea>
-      <button id="copyBtn" class="btn-ghost">📋 Копировать</button>
-    </div>
-
+<div class="result" style="margin-top:10px; display:grid; grid-template-columns:1fr auto; gap:12px; align-items:start;">
+  <textarea id="iframeOut" placeholder="Здесь появится iframe для вставки"></textarea>
+  <button id="copyBtn" class="btn-ghost">📋 Копировать</button>
+</div>
   </section>
 </main>
 
@@ -661,83 +660,89 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
     return null;
   }
 
-// === Публикация: генерация iframe с cfg-параметром ===
-const BASE_MAIN = 'https://kristeachme.github.io/quiz/quiz-main.html';
-const ENDPOINT    = "https://server-kjnn.onrender.com/publish";
-const PUBLISH_KEY = "nika_read_pub_2025";
+// === Константы для публикации ===
+const BASE_MAIN   = "https://kristeachme.github.io/quiz/quiz-main.html";  // URL страницы квиза
+const ENDPOINT    = "https://server-kjnn.onrender.com/publish";           // сервер публикации (Render)
+const PUBLISH_KEY = "nika_read_pub_2025";  
 
 async function publish() {
   const cfg = collectConfig();
-  console.log('CFG:', cfg); // отладка
-
   const err = validateConfig(cfg);
   if (err) {
     alert(err);
     return;
   }
-
-  const id = makeId(cfg);
+  const id   = makeId(cfg);
   const json = JSON.stringify(cfg, null, 2);
 
   try {
+    // Отправляем конфиг на сервер для сохранения в репо (repo/path/value):contentReference[oaicite:2]{index=2}
     const res = await fetch(ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        key: PUBLISH_KEY,
-        repo: "kristeachme/quiz", // ← твой репозиторий
-        path: `data/${id}.json`,  // JSON сохраняется сюда
-        value: json
+        key:   PUBLISH_KEY,
+        repo:  "kristeachme/quiz",         // репозиторий GitHub для сохранения:contentReference[oaicite:3]{index=3}
+        path:  `data/${id}.json`,          // путь в репо (папка data)
+        value: json                       // содержимое файла – конфигурация квиза
       })
     });
 
-    const text = await res.text();
-    console.log("Ответ сервера:", res.status, text);
-
-    if (!res.ok) {
-      alert("Ошибка публикации:\n" + res.status + "\n" + text);
-      return;
+    if (res.ok) {
+      // Формируем код iframe с параметром ?id=<ID> и отображаем его:contentReference[oaicite:4]{index=4}:contentReference[oaicite:5]{index=5}
+      const iframeCode = `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
+      const outElem = document.getElementById("iframeOut");
+      if (outElem) outElem.value = iframeCode;
+      alert("✅ Опубликовано! Подождите 30–60 секунд, пока появится кэш");  // сообщение об успешной публикации:contentReference[oaicite:6]{index=6}
+    } else {
+      // Ошибка от сервера (выводим текст ошибки):contentReference[oaicite:7]{index=7}
+      const msg = await res.text();
+      alert("❌ Ошибка при публикации:\n\n" + msg);
     }
-
-    // === Генерация iframe ===
-    const iframe = `<iframe src="${BASE_MAIN}?id=${id}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
-    document.getElementById('iframeOut').value = iframe;
-
   } catch (e) {
-    alert("Ошибка при сохранении:\n" + e.message);
+    // Сеть/соединение недоступно
+    alert("⚠️ Ошибка соединения:\n" + e.message);
   }
 }
 
-// === Быстрая проверка JSON ===
 function quickTest() {
   const cfg = collectConfig();
   const err = validateConfig(cfg);
-  if (err) { alert(err); return; }
-  alert(`JSON валиден. Вопросов: ${cfg.questions.length}`);
-  console.log(cfg);
+  if (err) {
+    alert(err);
+  } else {
+    alert(`JSON валиден. Вопросов: ${cfg.questions.length}`);
+    console.log(cfg);
+  }
 }
 
-// === Генерация уникального ID ===
+
 function makeId(cfg) {
-  const hash = btoa(JSON.stringify(cfg)).slice(0, 12);
-  return "q_" + hash;
+  const first = (cfg.questions[0]?.question || "quiz").trim();
+  const slug = first.toLowerCase()
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')       // убрать диакритику
+    .replace(/[^a-z0-9]+/g, '-')                            // заменить недопустимые символы на "-"
+    .replace(/^-+|-+$/g, '')                                // убрать лишние "-" в начале/конце
+    .slice(0, 40) || "quiz";                                // ограничить длину 40 символами
+  const d = new Date();
+  const p = n => String(n).padStart(2, '0');
+  const timestamp = `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  return `${slug}-${timestamp}`;  // например, "quiz-20251106-003000"
 }
 
-// === Копирование iframe в буфер обмена ===
+// === Копирование iframe-кода в буфер обмена ===
 function copyIframe() {
-  const out = document.getElementById('iframeOut');
-  if (!out || !out.value.trim()) {
-    alert('Сначала сгенерируйте iframe.');
+  const outElem = document.getElementById("iframeOut");
+  if (!outElem || !outElem.value.trim()) {
+    alert("Сначала сгенерируйте iframe.");
     return;
   }
-  navigator.clipboard.writeText(out.value);
+  navigator.clipboard.writeText(outElem.value);
 }
 
 // === Привязка кнопок к действиям ===
-document.getElementById('saveBtn')?.addEventListener('click', e => {
-  e.preventDefault();
-  publish();
-});
+// === Привязка кнопок к действиям ===
+document.getElementById('saveBtn')?.addEventListener('click', e => { e.preventDefault(); publish(); });
 document.getElementById('testBtn')?.addEventListener('click', quickTest);
 document.getElementById('copyBtn')?.addEventListener('click', copyIframe);
 </script>
