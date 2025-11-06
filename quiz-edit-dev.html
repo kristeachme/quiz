@@ -640,12 +640,6 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
       finalText:     get('#finalText','').trim(),
       roundTimerSec: parseInt(get('#roundTime','0'), 10) || 0,
 
-    globalWrong: (() => {
-  const el = document.querySelector('#globalWrong');
-  if (!el) return [];
-  return el.value.split('\n').map(s => s.trim()).filter(Boolean);
-})(),
-}; 
 
   // === Валидация конфигурации ===
   function validateConfig(cfg){
