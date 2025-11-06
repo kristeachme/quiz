@@ -31,7 +31,10 @@ body{
   display:flex; align-items:center; gap:10px;
   padding:10px 18px; background:#111; border-bottom:2px solid #1c1c1c;
 }
-.topbar .logo{ width:42px; height:42px; object-fit:contain }
+.topbar .logo{
+  width:42px; height:42px; object-fit:contain;
+  filter: drop-shadow(0 0 6px rgba(255,215,0,.35));
+}
 .topbar .title{
   font-weight:900; color:#ffd400; font-size:22px; letter-spacing:.3px;
 }
@@ -116,26 +119,46 @@ button.danger{ background:var(--danger); border:none; color:#fff }
 }
 .preview-item[data-mode="image"] #previewText{ display:none }
 
-.result{ margin-top:10px; display:grid; grid-template-columns:1fr auto; gap:12px; align-items:start }
-textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace }
-
-#levels .card, .qbox{ background:#191919; border:1px solid #2b2b2b; border-radius:14px; padding:16px }
-#levels h3{ margin:0 0 12px; font-size:16px }
-
-.footer{
-  margin-top:28px; padding:12px 24px; border-top:1px solid #1c1c1c;
-  color:#bbb; display:flex; gap:10px; align-items:center; justify-content:center
-}
-.footer img{ width:20px; height:20px; object-fit:contain }
-.footer a{ color:var(--accent); text-decoration:none; font-weight:800 }
-
-@media (max-width:1080px){ main{ grid-template-columns:1fr } }
+.result{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
+textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.level{background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:14px}
+.level h3{margin:0 0 10px;display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}
+.level .num{justify-self:center;font-weight:900}
+.level .actions{justify-self:end;display:flex;gap:8px}
+.level .actions .btn-ghost{padding:8px 10px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:1080px){ .grid-2{grid-template-columns:1fr} main{grid-template-columns:1fr} }
+  .footer{
+    margin-top:28px;
+    padding:12px 24px;
+    border-top:1px solid #1c1c1c;
+    color:#bbb;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    justify-content:center;
+  }
+  .footer img{
+    width:20px;
+    height:20px;
+    object-fit:contain;
+    filter: drop-shadow(0 0 5px rgba(255,215,0,.25));
+  }
+  .footer span{
+    color:#cfcfcf;
+    margin-right:6px;
+  }
+  .footer a{
+    color:#ffd400;
+    text-decoration:none;
+    font-weight:800;
+  }
 </style>
 </head>
 <body>
 
 <header class="topbar">
-  <img class="logo" src="kgb-logo.svg" alt="КГБ" onerror="this.onerror=null;this.src='kgb-logo.png'">
+  <img class="logo" src="/quiz/kgb-logo.png?v=3" alt="КГБ" width="42" height="42" loading="eager">
   <div class="title">Редактор игры «Парящий квиз» — КГБ</div>
 </header>
 
@@ -159,6 +182,7 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
           <select id="direction">
             <option value="vertical" selected>Сверху вниз</option>
             <option value="horizontal">Слева направо</option>
+            <option value="up">Снизу вверх</option>
           </select>
         </div>
       </div>
@@ -224,9 +248,11 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
         <div>
           <label>Фигура</label>
           <select id="shape">
-            <option selected>Прямоугольник</option>
-            <option>Скруглённый</option>
-            <option>Круг</option>
+            <option value="rect">Прямоугольник</option>
+            <option value="round">Скруглённый</option>
+            <option value="circle">Круг</option>
+            <option value="diamond">Ромб</option>
+            <option value="star">Звезда</option>
           </select>
         </div>
         <div>
@@ -287,248 +313,429 @@ textarea#iframeOut{ height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,
           <button type="button" class="btn-ghost" id="btnImage">Картинка</button>
         </div>
       </div>
+
       <div class="preview-stage">
         <div id="previewItem" class="preview-item" data-mode="text">
           <span id="previewText">Preview</span>
         </div>
       </div>
-      
     </div>
 
   </section>
 
   <section class="card">
-   <h2>❓ Вопросы</h2>
-<div id="levels" class="levels"></div>
-<div class="toolbar">
-  <button id="addQ" type="button">➕ Добавить вопрос</button>
-  <span class="pill">Неограниченно вопросов</span>
+    <h2>❓ Вопросы</h2>
+    <div id="levels" class="levels"></div>
+    <div class="toolbar">
+      <button id="addQ" type="button">➕ Добавить вопрос</button>
+      <span class="pill">Неограниченно вопросов</span>
+    </div>
+
+    <style>
+      .levels .level{
+        background:#111; border:1px solid #2a2a2a; border-radius:12px; padding:16px;
+      }
+      .level h3{
+        margin:0 0 10px; font-size:16px; color:#fff;
+        display:flex; align-items:center; justify-content:space-between;
+      }
+      .level h3 .num{ font-weight:800 }
+      .right{ display:flex; gap:10px; align-items:center }
+      .level .row{ display:grid; grid-template-columns:1fr 1fr; gap:16px }
+      .level input[type="text"], .level input[type="number"], .level textarea{
+        width:100%; background:#101010; color:#fff;
+        border:1px solid #3a3a3a; border-radius:10px; padding:12px 14px; font-size:16px;
+      }
+      .level textarea{ min-height:110px; resize:vertical }
+      .level .btn-ghost{ background:transparent; color:#fff; border:1px solid #444; border-radius:12px; padding:10px 12px; font-weight:800 }
+      .level .btn-danger{ background:#a80000; color:#fff; border:none; border-radius:12px; padding:10px 12px; font-weight:800 }
+      .toolbar{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px }
+      .pill{ display:inline-block; padding:8px 12px; border:1px dashed #444; border-radius:999px; color:#bbb; font-size:13px }
+    </style>
+
+    <script>
+      const $ = s => document.querySelector(s);
+      const $$ = s => document.querySelectorAll(s);
+
+      function qTemplate(idx){
+        const wrap = document.createElement('div');
+        wrap.className = 'level';
+        wrap.innerHTML = `
+          <h3>Вопрос <span class="num">${idx+1}</span>
+            <span class="right">
+              <button type="button" class="btn-ghost up">▲</button>
+              <button type="button" class="btn-ghost down">▼</button>
+              <button type="button" class="btn-danger del">Удалить</button>
+            </span>
+          </h3>
+          <label>Текст вопроса (вверху)</label>
+          <input type="text" class="question" placeholder="Например: Столица Франции?">
+          <div class="row">
+            <div>
+              <label>Правильный ответ (текст или URL)</label>
+              <input type="text" class="correct" placeholder="Париж или https://.../cat.gif">
+            </div>
+            <div>
+              <label>Неправильные (по одному в строке)</label>
+              <textarea class="wrong" placeholder="Марсель\nЛион\nНицца"></textarea>
+            </div>
+          </div>
+        `;
+        wrap.querySelector('.del').onclick  = () => { wrap.remove(); renumber(); };
+        wrap.querySelector('.up').onclick   = () => { const p = wrap.previousElementSibling; if(p){ wrap.parentNode.insertBefore(wrap, p); renumber(); } };
+        wrap.querySelector('.down').onclick = () => { const n = wrap.nextElementSibling; if(n){ wrap.parentNode.insertBefore(n, wrap); renumber(); } };
+        return wrap;
+      }
+
+      function addQ(){
+        const idx = $$('#levels .level').length;
+        $('#levels').appendChild(qTemplate(idx));
+        renumber();
+      }
+
+      function renumber(){
+        $$('#levels .level .num').forEach((n,i)=> n.textContent = i+1);
+      }
+
+      document.getElementById('addQ').addEventListener('click', e => { e.preventDefault(); addQ(); });
+      addQ();
+    </script>
+
+    <div class="grid-2" style="margin-top:10px">
+      <!-- 🎬 Запуск квиза -->
+      <div class="card">
+        <h2>🎬 Запуск квиза</h2>
+        <label>Текст при запуске (заголовок/фраза)</label>
+        <input type="text" id="startTitle" placeholder="Например: Игра «Парящий квиз»">
+        <div class="row" style="margin-top:8px">
+          <div>
+            <label>Текст кнопки запуска</label>
+            <input type="text" id="startButton" placeholder="Например: Начать">
+          </div>
+        </div>
+        <div style="font-size:12px;color:#bbb;margin-top:6px">
+          Если оставить пустым — будет использован стандартный текст («Начать игру»).
+        </div>
+      </div>
+
+      <!-- 🏁 Финальный фидбек -->
+      <div class="card">
+        <h2>🏁 Финальный фидбек</h2>
+        <label>Текст, который появится после завершения игры</label>
+        <textarea id="finalText" placeholder="Например: Отличная работа!"></textarea>
+        <div style="font-size:12px;color:#bbb;margin-top:6px">
+          Если оставить пустым — будет показан стандартный текст («Отличная работа!» или локализованный).
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>⏱️ Таймер раунда</h2>
+      <label>Продолжительность раунда (в секундах)</label>
+      <input type="number" id="roundTime" value="60" min="10" max="600" step="5">
+      <div style="font-size:12px; color:#bbb; margin-top:6px">
+        Если оставить пустым или 0 — игра без ограничения времени.
+      </div>
+    </div>
+
+    <!-- Раздел публикации (как в редакторе edit28) -->
+<h2 style="margin-top:14px">🚀 Публикация</h2>
+<div class="row">
+  <button id="saveBtn" type="button" class="btn">💾 Сохранить и получить iframe</button>
+  <button id="testBtn" type="button" class="btn-ghost">🔍 Валидация JSON</button>
 </div>
 
-<style>
-.levels .level{
-  background:#111; border:1px solid #2a2a2a; border-radius:12px; padding:16px;
-}
-.level h3{
-  margin:0 0 10px; font-size:16px; color:#fff;
-  display:flex; align-items:center; justify-content:space-between;
-}
-.level h3 .num{ font-weight:800 }
-.right{ display:flex; gap:10px; align-items:center }
-.level .row{ display:grid; grid-template-columns:1fr 1fr; gap:16px }
-.level input[type="text"], .level input[type="number"], .level textarea{
-  width:100%; background:#101010; color:#fff;
-  border:1px solid #3a3a3a; border-radius:10px; padding:12px 14px; font-size:16px;
-}
-.level textarea{ min-height:110px; resize:vertical }
-.level .btn-ghost{ background:transparent; color:#fff; border:1px solid #444; border-radius:12px; padding:10px 12px; font-weight:800 }
-.level .btn-danger{ background:#a80000; color:#fff; border:none; border-radius:12px; padding:10px 12px; font-weight:800 }
-.toolbar{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px }
-.pill{ display:inline-block; padding:8px 12px; border:1px dashed #444; border-radius:999px; color:#bbb; font-size:13px }
-</style>
-
-<script>
-const $ = s => document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
-
-function qTemplate(idx){
-  const wrap = document.createElement('div');
-  wrap.className = 'level';
-  wrap.innerHTML = `
-    <h3>Вопрос <span class="num">${idx+1}</span>
-      <span class="right">
-        <button type="button" class="btn-ghost up">▲</button>
-        <button type="button" class="btn-ghost down">▼</button>
-        <button type="button" class="btn-danger del">Удалить</button>
-      </span>
-    </h3>
-    <label>Текст вопроса (вверху)</label>
-    <input type="text" class="question" placeholder="Например: Столица Франции?">
-    <div class="row">
-      <div>
-        <label>Правильный ответ (текст или URL)</label>
-        <input type="text" class="correct" placeholder="Париж или https://.../cat.gif">
-      </div>
-      <div>
-        <label>Неправильные (по одному в строке)</label>
-        <textarea class="wrong" placeholder="Марсель\nЛион\nНицца"></textarea>
-      </div>
-    </div>
-  `;
-  wrap.querySelector('.del').onclick  = () => { wrap.remove(); renumber(); };
-  wrap.querySelector('.up').onclick   = () => { const p = wrap.previousElementSibling; if(p){ wrap.parentNode.insertBefore(wrap, p); renumber(); } };
-  wrap.querySelector('.down').onclick = () => { const n = wrap.nextElementSibling; if(n){ wrap.parentNode.insertBefore(n, wrap); renumber(); } };
-  return wrap;
-}
-
-function addQ(){
-  const idx = $$('#levels .level').length;
-  $('#levels').appendChild(qTemplate(idx));
-  renumber();
-}
-
-function renumber(){
-  $$('#levels .level .num').forEach((n,i)=> n.textContent = i+1);
-}
-
-document.getElementById('addQ').addEventListener('click', e => { e.preventDefault(); addQ(); });
-addQ();
-</script>
-
-    <h2 style="margin-top:16px">🚀 Публикация</h2>
-    <div class="row">
-     <button id="saveBtn"  type="button" onclick="window.publish && window.publish()">💾 Сохранить и получить iframe</button>
-<button id="testBtn"  type="button" class="btn-ghost" onclick="window.quickTest && window.quickTest()">🔍 Валидация JSON</button>
-
-<textarea id="iframeOut" placeholder="Здесь появится iframe для вставки"></textarea>
-
-<button id="copyBtn" type="button" class="btn-ghost" onclick="window.copyIframe && window.copyIframe()">📋 Копировать</button>
-
-    </div>
+<div class="result" style="margin-top:10px; display:grid; grid-template-columns:1fr auto; gap:12px; align-items:start;">
+  <textarea id="iframeOut" placeholder="Здесь появится iframe для вставки"></textarea>
+  <button id="copyBtn" class="btn-ghost">📋 Копировать</button>
+</div>
   </section>
 </main>
 
 <footer class="footer">
-  <img src="/quiz/kgb-logo.png?v=4" alt="КГБ">
+  <img class="brand" src="/quiz/kgb-logo.png?v=3" alt="КГБ" width="20" height="20">
   <span>© 2025</span>
   <a href="#" title="Корпорация Геймификации Будущего">Корпорация Геймификации Будущего</a>
 </footer>
 
 <script>
-// здесь остаётся твой JS как есть
-</script>
-<script>
-(function(){
-  const item  = document.getElementById('previewItem');
-  const text  = document.getElementById('previewText');
-  const input = document.getElementById('previewValue');
-  const bText = document.getElementById('btnText');
-  const bImg  = document.getElementById('btnImage');
+(function () {
+  const preview       = document.getElementById('previewItem');
+  const previewTextEl = document.getElementById('previewText');
+  const inputValue    = document.getElementById('previewValue');
+  const btnText       = document.getElementById('btnText');
+  const btnImage      = document.getElementById('btnImage');
 
-  function setActive(btn){
-    [bText,bImg].forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
+  function applyFontToPreview(fontFamily){
+    if(!fontFamily) return;
+    const id = 'gf-'+fontFamily.replace(/\s+/g,'-').toLowerCase();
+    if(document.getElementById(id)) return;
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(fontFamily) + ':wght@400;700;800&display=swap';
+    document.head.appendChild(link);
   }
 
-  function setMode(mode){
-    item.setAttribute('data-mode', mode);
-    if(mode==='image'){
-      const v = (input.value||'').trim();
-      item.style.backgroundImage = /^https?:\/\//i.test(v) ? `url("${v}")` : 'none';
-    }else{
-      item.style.backgroundImage = 'none';
-      text.textContent = (input.value||'').trim() || 'Preview';
+  function setMode(mode) {
+    preview.dataset.mode = mode; // "text" or "image"
+    updatePreview();
+  }
+
+  function shapeToClip(shape) {
+    switch (shape) {
+      case 'rect':    return { borderRadius: '0',    clip: 'none' };
+      case 'round':   return { borderRadius: '16px', clip: 'none' };
+      case 'circle':  return { borderRadius: '9999px', clip: 'none' };
+      case 'diamond': return { borderRadius: '0', clip: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' };
+      case 'star':    return { borderRadius: '0', clip: 'polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)' };
+      default:        return { borderRadius: '12px', clip: 'none' };
     }
   }
 
-  bText.addEventListener('click', ()=>{ setActive(bText); setMode('text'); });
-  bImg .addEventListener('click', ()=>{ setActive(bImg ); setMode('image'); });
-  input.addEventListener('input', ()=> setMode(item.getAttribute('data-mode')||'text'));
+  function updatePreview() {
+    const mode       = preview.dataset.mode || 'text';
+    const value      = (inputValue?.value || '').trim();
 
-  setActive(bText);
-  setMode('text');
-})();
-</script>
-<script>
-const $  = s => document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
+    // Determine shape (handle both Russian labels and raw values)
+    const shapeRaw   = document.getElementById('shape')?.value || 'rect';
+    const shapeMap   = {
+      'Прямоугольник': 'rect',    'rect': 'rect',
+      'Скруглённый':   'round', 'round': 'round', 'round': 'round',
+      'Круг':          'circle',  'circle': 'circle',
+      'Ромб':          'diamond', 'diamond': 'diamond',
+      'Звезда':        'star',    'star': 'star'
+    };
+    const shape = shapeMap[shapeRaw] || 'rect';
 
-const BASE_MAIN = 'https://kristeachme.github.io/quiz/quiz-main.html';
+    const bgColor   = document.getElementById('bgColor')?.value || '#151515';
+    const bgImage   = (document.getElementById('bgImage')?.value || '').trim();
+    const alpha     = parseFloat(document.getElementById('alpha')?.value || '1') || 1;
+    const padding   = parseInt(document.getElementById('padding')?.value || '22', 10);
+    const borderOn  = !!document.getElementById('borderOn')?.checked;
+    const borderCol = document.getElementById('borderColor')?.value || '#ffffff';
+    const borderW   = parseInt(document.getElementById('borderWidth')?.value || '1', 10);
+    const shadowOn  = !!document.getElementById('shadowOn')?.checked;
+    const glowOn    = !!document.getElementById('glowOn')?.checked;
+    const glowColor = document.getElementById('glowColor')?.value || '#00ffff';
 
-function collectConfig(){
-  const questions = [];
-  $$('#levels .level').forEach(div => {
-    questions.push({
-      question: (div.querySelector('.question')?.value || '').trim(),
-      correct : (div.querySelector('.correct') ?.value || '').trim(),
-      wrong   : (div.querySelector('.wrong')   ?.value || '').split('\n').map(s=>s.trim()).filter(Boolean)
+    const fontFam   = (document.getElementById('font')?.value || 'PT Sans').trim().replace(/"/g,'');
+    applyFontToPreview(fontFam);
+
+    const fontSize  = parseInt(document.getElementById('fontSize')?.value || '24', 10);
+    const textColor = document.getElementById('textColor')?.value || '#ffffff';
+
+    const { borderRadius, clip } = shapeToClip(shape);
+
+    // Apply shape and style to preview container
+    preview.style.borderRadius = borderRadius;
+    preview.style.clipPath     = clip;
+    preview.style.padding      = padding + 'px';
+    preview.style.opacity      = String(alpha);
+
+    if (bgImage && mode === 'image') {
+      preview.style.background = `center/contain no-repeat url("${bgImage}")`;
+      preview.style.backgroundColor = 'transparent';
+    } else {
+      preview.style.background = 'none';
+      preview.style.backgroundColor = bgColor;
+    }
+    preview.style.border = borderOn ? `${borderW}px solid ${borderCol}` : 'none';
+
+    const baseShadow = shadowOn ? '0 10px 24px rgba(0,0,0,.35)' : 'none';
+    const glowShadow = glowOn ? `0 0 16px ${glowColor}, 0 0 28px ${glowColor}55` : '';
+    preview.style.boxShadow = [baseShadow, glowShadow].filter(Boolean).join(', ');
+
+    // Preview content
+    if (mode === 'image') {
+      previewTextEl.style.display = 'none';
+      if (value) {
+        preview.style.background = `center/contain no-repeat url("${value}")`;
+        preview.style.backgroundColor = 'transparent';
+      }
+    } else {
+      previewTextEl.style.display = '';
+      previewTextEl.textContent      = value || 'Preview';
+      previewTextEl.style.fontFamily = `"${fontFam}", system-ui, sans-serif`;
+      previewTextEl.style.fontSize   = fontSize + 'px';
+      previewTextEl.style.color      = textColor;
+    }
+  }
+
+  // Event listeners for preview mode toggles
+  if (btnText) {
+    btnText.addEventListener('click', () => {
+      btnText.classList.add('active');
+      btnImage?.classList.remove('active');
+      setMode('text');
+    });
+  }
+  if (btnImage) {
+    btnImage.addEventListener('click', () => {
+      btnImage.classList.add('active');
+      btnText?.classList.remove('active');
+      setMode('image');
+    });
+  }
+  if (inputValue) inputValue.addEventListener('input', updatePreview);
+
+  // Update preview when any input/select/textarea in the editor changes
+  ['body','main','#editor'].forEach(rootSel => {
+    const root = document.querySelector(rootSel);
+    if (!root) return;
+    root.querySelectorAll('input, select, textarea').forEach(el => {
+      el.addEventListener('input',  updatePreview);
+      el.addEventListener('change', updatePreview);
     });
   });
 
-  const answersPerQuestion = parseInt($('#answersPerQuestion')?.value ?? '4', 10);
-  const spawnInterval      = parseInt($('#spawnInterval')?.value      ?? '900', 10);
-  const direction          = $('#direction')?.value ?? 'vertical';
-  const speed              = parseInt($('#speed')?.value ?? '5', 10);
-  const font               = ($('#font')?.value || '').trim();
-  const fontSize           = parseInt($('#fontSize')?.value ?? '24', 10);
-  const textColor          = $('#textColor')?.value || '#ffffff';
-  const cursor             = ($('#cursorUrl')?.value || '').trim();
-
-  return {
-    answersPerQuestion: Math.max(2, Math.min(10, isNaN(answersPerQuestion)?4:answersPerQuestion)),
-    spawnInterval     : Math.max(200, isNaN(spawnInterval)?900:spawnInterval),
-    direction,
-    speed: Math.max(1, Math.min(10, isNaN(speed)?5:speed)),
-    font, fontSize: Math.max(10, isNaN(fontSize)?24:fontSize), textColor, cursor,
-    questions
-  };
-}
-
-function validateConfig(cfg){
-  if (!cfg.questions.length) return 'Добавьте хотя бы один вопрос.';
-  for (let i=0;i<cfg.questions.length;i++){
-    const q = cfg.questions[i];
-    if (!q.question) return `Вопрос ${i+1}: заполните текст вопроса.`;
-    if (!q.correct)  return `Вопрос ${i+1}: укажите правильный ответ.`;
-    if ((q.wrong?.length || 0) + 1 < 2) return `Вопрос ${i+1}: нужен минимум один неправильный (чтобы было ≥ 2 варианта).`;
-  }
-  return null;
-}
-
-function makeId(cfg){
-  const first = (cfg.questions[0]?.question || 'quiz').trim();
-  const slug = first.toLowerCase()
-    .normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
-    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'quiz';
-  const d=new Date(), p=n=>String(n).padStart(2,'0');
-  const stamp=`${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
-  return `${slug}-${stamp}`;
-}
-
-function publish(){
-  const cfg = collectConfig();
-  const err = validateConfig(cfg);
-  if (err){ alert(err); return; }
-
-  const id = makeId(cfg);
-  const jsonStr = JSON.stringify(cfg, null, 2);
-
-  const blob = new Blob([jsonStr], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = id + '.json';
-  document.body.appendChild(a); a.click(); a.remove();
-
-  const iframe = `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
-  const out = $('#iframeOut');
-  if (out) out.value = iframe;
-
-  alert('JSON сохранён. Загрузите файл в папку /data вашего репозитория. После загрузки ссылка в iframe заработает.');
-}
-
-function quickTest(){
-  const cfg = collectConfig();
-  const err = validateConfig(cfg);
-  if (err){ alert(err); return; }
-  alert('JSON валиден. Вопросов: ' + cfg.questions.length);
-}
-
-function copyIframe(){
-  const v = $('#iframeOut')?.value?.trim();
-  if (!v){ alert('Сначала получите iframe.'); return; }
-  navigator.clipboard.writeText(v).catch(()=>{});
-}
-
-window.publish    = publish;
-window.quickTest  = quickTest;
-window.copyIframe = copyIframe;
-
-document.addEventListener('DOMContentLoaded', () => {
-  $('#saveBtn')?.addEventListener('click', e => { e.preventDefault(); publish(); });
-  $('#testBtn')?.addEventListener('click', e => { e.preventDefault(); quickTest(); });
-  $('#copyBtn')?.addEventListener('click', e => { e.preventDefault(); copyIframe(); });
-});
+  // Initialize preview in text mode by default
+  btnText?.classList.add('active');
+  btnImage?.classList.remove('active');
+  setMode('text');
+})();
 </script>
 
+<script>
+  // === Сбор конфигурации из редактора ===
+  function collectConfig(){
+    const get = (sel, def = '') => document.querySelector(sel)?.value ?? def;
+
+    const questions = [];
+    document.querySelectorAll('#levels .level').forEach(div => {
+      questions.push({
+        question: div.querySelector('.question')?.value?.trim() || '',
+        correct:  div.querySelector('.correct')?.value?.trim()  || '',
+        wrong:    (div.querySelector('.wrong')?.value || '')
+                  .split('\n').map(s => s.trim()).filter(Boolean)
+      });
+    });
+
+    return {
+      answersPerQuestion: Math.max(2, Math.min(10, parseInt(get('#answersPerQuestion','4'), 10) || 4)),
+      spawnInterval:      Math.max(200, parseInt(get('#spawnInterval','900'), 10) || 900),
+      direction:          document.querySelector('#direction')?.value || 'vertical',
+      language:           get('#language','ru'),
+      font:               (document.querySelector('#font')?.value || 'PT Sans').trim(),
+      fontSize:           parseInt(get('#fontSize','24'), 10) || 24,
+      textColor:          get('#textColor','#ffffff'),
+      speed:              parseInt(get('#speed','5'), 10) || 5,
+      cursorUrl:          get('#cursorUrl','').trim(),
+
+      shape:        document.querySelector('#shape')?.value || 'rect',
+      bgColor:      get('#bgColor','#151515'),
+      bgImage:      get('#bgImage','').trim(),
+      borderOn:     !!document.querySelector('#borderOn')?.checked,
+      borderColor:  get('#borderColor','#ffffff'),
+      borderWidth:  parseInt(get('#borderWidth','1'), 10) || 1,
+      shadowOn:     !!document.querySelector('#shadowOn')?.checked,
+      glowOn:       !!document.querySelector('#glowOn')?.checked,
+      glowColor:    get('#glowColor','#00ffff'),
+      alpha:        parseFloat(get('#alpha','1')) || 1,
+      effect3d:     !!document.querySelector('#effect3d')?.checked,
+      padding:      parseInt(get('#padding','22'), 10) || 22,
+
+      startTitle:    get('#startTitle','').trim(),
+      startButton:   get('#startButton','').trim(),
+      finalText:     get('#finalText','').trim(),
+      roundTimerSec: parseInt(get('#roundTime','0'), 10) || 0,
+
+
+  // === Валидация конфигурации ===
+  function validateConfig(cfg){
+    if (!cfg.questions.length) return 'Добавьте хотя бы один вопрос.';
+    for (let i = 0; i < cfg.questions.length; i++){
+      const q = cfg.questions[i];
+      if (!q.question) return `Вопрос ${i+1}: заполните текст вопроса.`;
+      if (!q.correct)  return `Вопрос ${i+1}: укажите правильный ответ.`;
+      if ((q.wrong?.length ?? 0) < 1)
+  return `Вопрос ${i+1}: нужен минимум один неправильный (чтобы было ≥ 2 варианта).`;
+    }
+    return null;
+  }
+
+// === Константы для публикации ===
+const ENDPOINT    = "https://server-kjnn.onrender.com/publish";          
+const PUBLISH_KEY = "nika_read_pub_2025";  
+const BASE_MAIN   = "https://kristeachme.github.io/quiz/quiz-main.html"; 
+    
+  async function publish(){
+      const cfg = collectConfig();
+      const err = validate(cfg);
+      if(err){ alert(err); return; }
+ 
+  const id   = makeId(cfg);
+  const json = JSON.stringify(cfg, null, 2);
+
+  try {
+    // Отправляем конфиг на сервер для сохранения в репо (repo/path/value):contentReference[oaicite:2]{index=2}
+    const res = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        key:   PUBLISH_KEY,
+        repo:  "kristeachme/quiz",        
+        path:  `data/${id}.json`,         
+        value: json                     
+      })
+    });
+
+    if (res.ok) {
+      // Формируем код iframe с параметром ?id=<ID> и отображаем его:contentReference[oaicite:4]{index=4}:contentReference[oaicite:5]{index=5}
+      const iframeCode = `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
+      const outElem = document.getElementById("iframeOut");
+      if (outElem) outElem.value = iframeCode;
+      alert("✅ Опубликовано! Подождите 30–60 секунд, пока появится кэш"); 
+    } else {
+      // Ошибка от сервера (выводим текст ошибки):contentReference[oaicite:7]{index=7}
+      const msg = await res.text();
+      alert("❌ Ошибка при публикации:\n\n" + msg);
+    }
+  } catch (e) {
+    // Сеть/соединение недоступно
+    alert("⚠️ Ошибка соединения:\n" + e.message);
+  }
+}
+
+function quickTest() {
+  const cfg = collectConfig();
+  const err = validateConfig(cfg);
+  if (err) {
+    alert(err);
+  } else {
+    alert(`JSON валиден. Вопросов: ${cfg.questions.length}`);
+    console.log(cfg);
+  }
+}
+
+
+function makeId(cfg) {
+  const first = (cfg.questions[0]?.question || "quiz").trim();
+  const slug = first.toLowerCase()
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')       // убрать диакритику
+    .replace(/[^a-z0-9]+/g, '-')                            // заменить недопустимые символы на "-"
+    .replace(/^-+|-+$/g, '')                                // убрать лишние "-" в начале/конце
+    .slice(0, 40) || "quiz";                                // ограничить длину 40 символами
+  const d = new Date();
+  const p = n => String(n).padStart(2, '0');
+  const timestamp = `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  return `${slug}-${timestamp}`;  // например, "quiz-20251106-003000"
+}
+
+// === Копирование iframe-кода в буфер обмена ===
+function copyIframe() {
+  const outElem = document.getElementById("iframeOut");
+  if (!outElem || !outElem.value.trim()) {
+    alert("Сначала сгенерируйте iframe.");
+    return;
+  }
+  navigator.clipboard.writeText(outElem.value);
+}
+
+// === Привязка кнопок к действиям ===
+document.getElementById('saveBtn')?.addEventListener('click', e => { e.preventDefault(); publish(); });
+document.getElementById('testBtn')?.addEventListener('click', quickTest);
+document.getElementById('copyBtn')?.addEventListener('click', copyIframe);
+</script>
 </body>
 </html>
