@@ -501,7 +501,7 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
     const shapeRaw   = document.getElementById('shape')?.value || 'rect';
     const shapeMap   = {
       'Прямоугольник': 'rect',    'rect': 'rect',
-      'Скруглённый':   'rounded', 'round': 'rounded', 'rounded': 'rounded',
+      'Скруглённый':   'round', 'round': 'round', 'round': 'round',
       'Круг':          'circle',  'circle': 'circle',
       'Ромб':          'diamond', 'diamond': 'diamond',
       'Звезда':        'star',    'star': 'star'
@@ -682,9 +682,9 @@ async function publish() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         key:   PUBLISH_KEY,
-        repo:  "kristeachme/quiz",         // репозиторий GitHub для сохранения:contentReference[oaicite:3]{index=3}
-        path:  `data/${id}.json`,          // путь в репо (папка data)
-        value: json                       // содержимое файла – конфигурация квиза
+        repo:  "kristeachme/quiz",        
+        path:  `data/${id}.json`,         
+        value: json                     
       })
     });
 
@@ -693,7 +693,7 @@ async function publish() {
       const iframeCode = `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
       const outElem = document.getElementById("iframeOut");
       if (outElem) outElem.value = iframeCode;
-      alert("✅ Опубликовано! Подождите 30–60 секунд, пока появится кэш");  // сообщение об успешной публикации:contentReference[oaicite:6]{index=6}
+      alert("✅ Опубликовано! Подождите 30–60 секунд, пока появится кэш"); 
     } else {
       // Ошибка от сервера (выводим текст ошибки):contentReference[oaicite:7]{index=7}
       const msg = await res.text();
@@ -740,7 +740,6 @@ function copyIframe() {
   navigator.clipboard.writeText(outElem.value);
 }
 
-// === Привязка кнопок к действиям ===
 // === Привязка кнопок к действиям ===
 document.getElementById('saveBtn')?.addEventListener('click', e => { e.preventDefault(); publish(); });
 document.getElementById('testBtn')?.addEventListener('click', quickTest);
