@@ -459,6 +459,7 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
 </footer>
 
 <script>
+/* ===== Предпросмотр ===== */
 (function () {
   const preview       = document.getElementById('previewItem');
   const previewTextEl = document.getElementById('previewText');
@@ -473,38 +474,39 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
     const link = document.createElement('link');
     link.id = id;
     link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(fontFamily) + ':wght@400;700;800&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family='
+                + encodeURIComponent(fontFamily)
+                + ':wght@400;700;800&display=swap';
     document.head.appendChild(link);
   }
 
   function setMode(mode) {
-    preview.dataset.mode = mode; // "text" or "image"
+    preview.dataset.mode = mode; // "text" | "image"
     updatePreview();
   }
 
   function shapeToClip(shape) {
     switch (shape) {
-      case 'rect':    return { borderRadius: '0',    clip: 'none' };
-      case 'round':   return { borderRadius: '16px', clip: 'none' };
+      case 'rect':    return { borderRadius: '0',      clip: 'none' };
+      case 'round':   return { borderRadius: '16px',   clip: 'none' };
       case 'circle':  return { borderRadius: '9999px', clip: 'none' };
-      case 'diamond': return { borderRadius: '0', clip: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' };
-      case 'star':    return { borderRadius: '0', clip: 'polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)' };
-      default:        return { borderRadius: '12px', clip: 'none' };
+      case 'diamond': return { borderRadius: '0',      clip: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' };
+      case 'star':    return { borderRadius: '0',      clip: 'polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)' };
+      default:        return { borderRadius: '12px',   clip: 'none' };
     }
   }
 
   function updatePreview() {
-    const mode       = preview.dataset.mode || 'text';
-    const value      = (inputValue?.value || '').trim();
+    const mode  = preview.dataset.mode || 'text';
+    const value = (inputValue?.value || '').trim();
 
-    // Determine shape (handle both Russian labels and raw values)
-    const shapeRaw   = document.getElementById('shape')?.value || 'rect';
-    const shapeMap   = {
-      'Прямоугольник': 'rect',    'rect': 'rect',
-      'Скруглённый':   'round', 'round': 'round', 'round': 'round',
-      'Круг':          'circle',  'circle': 'circle',
-      'Ромб':          'diamond', 'diamond': 'diamond',
-      'Звезда':        'star',    'star': 'star'
+    const shapeRaw = document.getElementById('shape')?.value || 'rect';
+    const shapeMap = {
+      'Прямоугольник':'rect',   'rect':'rect',
+      'Скруглённый':'round',    'round':'round',
+      'Круг':'circle',          'circle':'circle',
+      'Ромб':'diamond',         'diamond':'diamond',
+      'Звезда':'star',          'star':'star'
     };
     const shape = shapeMap[shapeRaw] || 'rect';
 
@@ -521,13 +523,10 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
 
     const fontFam   = (document.getElementById('font')?.value || 'PT Sans').trim().replace(/"/g,'');
     applyFontToPreview(fontFam);
-
     const fontSize  = parseInt(document.getElementById('fontSize')?.value || '24', 10);
     const textColor = document.getElementById('textColor')?.value || '#ffffff';
 
     const { borderRadius, clip } = shapeToClip(shape);
-
-    // Apply shape and style to preview container
     preview.style.borderRadius = borderRadius;
     preview.style.clipPath     = clip;
     preview.style.padding      = padding + 'px';
@@ -546,7 +545,6 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
     const glowShadow = glowOn ? `0 0 16px ${glowColor}, 0 0 28px ${glowColor}55` : '';
     preview.style.boxShadow = [baseShadow, glowShadow].filter(Boolean).join(', ');
 
-    // Preview content
     if (mode === 'image') {
       previewTextEl.style.display = 'none';
       if (value) {
@@ -562,180 +560,141 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
     }
   }
 
-  // Event listeners for preview mode toggles
-  if (btnText) {
-    btnText.addEventListener('click', () => {
-      btnText.classList.add('active');
-      btnImage?.classList.remove('active');
-      setMode('text');
-    });
-  }
-  if (btnImage) {
-    btnImage.addEventListener('click', () => {
-      btnImage.classList.add('active');
-      btnText?.classList.remove('active');
-      setMode('image');
-    });
-  }
-  if (inputValue) inputValue.addEventListener('input', updatePreview);
+  btnText?.addEventListener('click', () => { btnText.classList.add('active'); btnImage?.classList.remove('active'); setMode('text');  });
+  btnImage?.addEventListener('click', () => { btnImage.classList.add('active'); btnText?.classList.remove('active'); setMode('image'); });
+  inputValue?.addEventListener('input', updatePreview);
 
-  // Update preview when any input/select/textarea in the editor changes
-  ['body','main','#editor'].forEach(rootSel => {
+  ['body','main','#editor'].forEach(rootSel=>{
     const root = document.querySelector(rootSel);
-    if (!root) return;
-    root.querySelectorAll('input, select, textarea').forEach(el => {
-      el.addEventListener('input',  updatePreview);
-      el.addEventListener('change', updatePreview);
+    if(!root) return;
+    root.querySelectorAll('input,select,textarea').forEach(el=>{
+      el.addEventListener('input', updatePreview);
+      el.addEventListener('change',updatePreview);
     });
   });
 
-  // Initialize preview in text mode by default
   btnText?.classList.add('active');
-  btnImage?.classList.remove('active');
   setMode('text');
 })();
-</script>
 
-<script>
-  // === Сбор конфигурации из редактора ===
-  function collectConfig(){
-    const get = (sel, def = '') => document.querySelector(sel)?.value ?? def;
+/* ===== Сбор/валидация/публикация ===== */
+function collectConfig(){
+  const get = (sel, def = '') => document.querySelector(sel)?.value ?? def;
 
-    const questions = [];
-    document.querySelectorAll('#levels .level').forEach(div => {
-      questions.push({
-        question: div.querySelector('.question')?.value?.trim() || '',
-        correct:  div.querySelector('.correct')?.value?.trim()  || '',
-        wrong:    (div.querySelector('.wrong')?.value || '')
-                  .split('\n').map(s => s.trim()).filter(Boolean)
-      });
+  const questions = [];
+  document.querySelectorAll('#levels .level').forEach(div=>{
+    questions.push({
+      question: div.querySelector('.question')?.value?.trim() || '',
+      correct:  div.querySelector('.correct')?.value?.trim()  || '',
+      wrong:    (div.querySelector('.wrong')?.value || '')
+                .split('\n').map(s=>s.trim()).filter(Boolean)
     });
+  });
 
-    return {
-      answersPerQuestion: Math.max(2, Math.min(10, parseInt(get('#answersPerQuestion','4'), 10) || 4)),
-      spawnInterval:      Math.max(200, parseInt(get('#spawnInterval','900'), 10) || 900),
-      direction:          document.querySelector('#direction')?.value || 'vertical',
-      language:           get('#language','ru'),
-      font:               (document.querySelector('#font')?.value || 'PT Sans').trim(),
-      fontSize:           parseInt(get('#fontSize','24'), 10) || 24,
-      textColor:          get('#textColor','#ffffff'),
-      speed:              parseInt(get('#speed','5'), 10) || 5,
-      cursorUrl:          get('#cursorUrl','').trim(),
+  return {
+    answersPerQuestion: Math.max(2, Math.min(10, parseInt(get('#answersPerQuestion','4'),10) || 4)),
+    spawnInterval:      Math.max(200, parseInt(get('#spawnInterval','900'),10) || 900),
+    direction:          document.querySelector('#direction')?.value || 'vertical',
+    language:           get('#language','ru'),
+    font:               (document.querySelector('#font')?.value || 'PT Sans').trim(),
+    fontSize:           parseInt(get('#fontSize','24'),10) || 24,
+    textColor:          get('#textColor','#ffffff'),
+    speed:              parseInt(get('#speed','5'),10) || 5,
+    cursorUrl:          get('#cursorUrl','').trim(),
 
-      shape:        document.querySelector('#shape')?.value || 'rect',
-      bgColor:      get('#bgColor','#151515'),
-      bgImage:      get('#bgImage','').trim(),
-      borderOn:     !!document.querySelector('#borderOn')?.checked,
-      borderColor:  get('#borderColor','#ffffff'),
-      borderWidth:  parseInt(get('#borderWidth','1'), 10) || 1,
-      shadowOn:     !!document.querySelector('#shadowOn')?.checked,
-      glowOn:       !!document.querySelector('#glowOn')?.checked,
-      glowColor:    get('#glowColor','#00ffff'),
-      alpha:        parseFloat(get('#alpha','1')) || 1,
-      effect3d:     !!document.querySelector('#effect3d')?.checked,
-      padding:      parseInt(get('#padding','22'), 10) || 22,
+    shape:        document.querySelector('#shape')?.value || 'rect',
+    bgColor:      get('#bgColor','#151515'),
+    bgImage:      get('#bgImage','').trim(),
+    borderOn:     !!document.querySelector('#borderOn')?.checked,
+    borderColor:  get('#borderColor','#ffffff'),
+    borderWidth:  parseInt(get('#borderWidth','1'),10) || 1,
+    shadowOn:     !!document.querySelector('#shadowOn')?.checked,
+    glowOn:       !!document.querySelector('#glowOn')?.checked,
+    glowColor:    get('#glowColor','#00ffff'),
+    alpha:        parseFloat(get('#alpha','1')) || 1,
+    effect3d:     !!document.querySelector('#effect3d')?.checked,
+    padding:      parseInt(get('#padding','22'),10) || 22,
 
-      startTitle:    get('#startTitle','').trim(),
-      startButton:   get('#startButton','').trim(),
-      finalText:     get('#finalText','').trim(),
-      roundTimerSec: parseInt(get('#roundTime','0'), 10) || 0,
+    startTitle:    get('#startTitle','').trim(),
+    startButton:   get('#startButton','').trim(),
+    finalText:     get('#finalText','').trim(),
+    roundTimerSec: parseInt(get('#roundTime','0'),10) || 0,
 
-<script>
-  function validateConfig(cfg){
-    if (!cfg.questions.length) return 'Добавьте хотя бы один вопрос.';
-    for (let i = 0; i < cfg.questions.length; i++){
-      const q = cfg.questions[i];
-      if (!q.question) return `Вопрос ${i+1}: заполните текст вопроса.`;
-      if (!q.correct)  return `Вопрос ${i+1}: укажите правильный ответ.`;
-      if ((q.wrong?.length ?? 0) < 1)
-  return `Вопрос ${i+1}: нужен минимум один неправильный (чтобы было ≥ 2 варианта).`;
-    }
-    return null;
-  }
- <script>
-      
-// === Константы для публикации ===
-const ENDPOINT    = "https://server-kjnn.onrender.com/publish";          
-const PUBLISH_KEY = "nika_read_pub_2025";  
-const BASE_MAIN   = "https://kristeachme.github.io/quiz/quiz-main.html"; 
-    
-  async function publish(){
-      const cfg = collectConfig();
-      const err = validate(cfg);
-      if(err){ alert(err); return; }
- 
-  const id   = makeId(cfg);
-  const json = JSON.stringify(cfg, null, 2);
+    globalWrong: (document.querySelector('#globalWrong')?.value || '')
+                 .split('\n').map(s=>s.trim()).filter(Boolean),
 
-  try {
-    // Отправляем конфиг на сервер для сохранения в репо (repo/path/value):contentReference[oaicite:2]{index=2}
-    const res = await fetch(ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        key:   PUBLISH_KEY,
-        repo:  "kristeachme/quiz",        
-        path:  `data/${id}.json`,         
-        value: json                     
-      })
-    });
-
-    if (res.ok) {
-      // Формируем код iframe с параметром ?id=<ID> и отображаем его:contentReference[oaicite:4]{index=4}:contentReference[oaicite:5]{index=5}
-      const iframeCode = `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
-      const outElem = document.getElementById("iframeOut");
-      if (outElem) outElem.value = iframeCode;
-      alert("✅ Опубликовано! Подождите 30–60 секунд, пока появится кэш"); 
-    } else {
-      // Ошибка от сервера (выводим текст ошибки):contentReference[oaicite:7]{index=7}
-      const msg = await res.text();
-      alert("❌ Ошибка при публикации:\n\n" + msg);
-    }
-  } catch (e) {
-    // Сеть/соединение недоступно
-    alert("⚠️ Ошибка соединения:\n" + e.message);
-  }
+    questions
+  };
 }
 
-function quickTest() {
+function validateConfig(cfg){
+  if(!cfg.questions.length) return 'Добавьте хотя бы один вопрос.';
+  for(let i=0;i<cfg.questions.length;i++){
+    const q = cfg.questions[i];
+    if(!q.question) return `Вопрос ${i+1}: заполните текст вопроса.`;
+    if(!q.correct)  return `Вопрос ${i+1}: укажите правильный ответ.`;
+    if((q.wrong?.length ?? 0) < 1)
+      return `Вопрос ${i+1}: нужен минимум один неправильный (чтобы было ≥ 2 варианта).`;
+  }
+  return null;
+}
+
+function makeId(cfg){
+  const first = (cfg.questions[0]?.question || 'quiz').trim();
+  const slug = first.toLowerCase()
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'quiz';
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  return `${slug}-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
+
+/* --- Константы публикации --- */
+const BASE_MAIN = 'https://kristeachme.github.io/quiz/quiz-main.html';
+
+/* Вариант публикации «без сервера»: скачиваем JSON локально и даём iframe */
+function publish(){
   const cfg = collectConfig();
   const err = validateConfig(cfg);
-  if (err) {
-    alert(err);
-  } else {
-    alert(`JSON валиден. Вопросов: ${cfg.questions.length}`);
-    console.log(cfg);
-  }
+  if(err){ alert(err); return; }
+
+  const id   = makeId(cfg);
+  const json = JSON.stringify(cfg,null,2);
+
+  // 1) скачать JSON
+  const blob = new Blob([json], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${id}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  // 2) iframe
+  const iframeCode = `<iframe src="${BASE_MAIN}?id=${encodeURIComponent(id)}" width="900" height="640" style="border:0;" allow="autoplay" allowfullscreen></iframe>`;
+  const out = document.getElementById('iframeOut');
+  if(out) out.value = iframeCode;
+
+  alert(`JSON сохранён как ${id}.json.\nЗагрузите файл в папку /data репозитория. После коммита iframe начнёт работать.`);
 }
 
-
-function makeId(cfg) {
-  const first = (cfg.questions[0]?.question || "quiz").trim();
-  const slug = first.toLowerCase()
-    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')       // убрать диакритику
-    .replace(/[^a-z0-9]+/g, '-')                            // заменить недопустимые символы на "-"
-    .replace(/^-+|-+$/g, '')                                // убрать лишние "-" в начале/конце
-    .slice(0, 40) || "quiz";                                // ограничить длину 40 символами
-  const d = new Date();
-  const p = n => String(n).padStart(2, '0');
-  const timestamp = `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
-  return `${slug}-${timestamp}`;  // например, "quiz-20251106-003000"
+function quickTest(){
+  const cfg = collectConfig();
+  const err = validateConfig(cfg);
+  if(err){ alert(err); return; }
+  alert(`JSON валиден. Вопросов: ${cfg.questions.length}`);
+  console.log(cfg);
 }
 
-// === Копирование iframe-кода в буфер обмена ===
-function copyIframe() {
-  const outElem = document.getElementById("iframeOut");
-  if (!outElem || !outElem.value.trim()) {
-    alert("Сначала сгенерируйте iframe.");
-    return;
-  }
-  navigator.clipboard.writeText(outElem.value);
+function copyIframe(){
+  const out = document.getElementById('iframeOut');
+  if(!out || !out.value.trim()){ alert('Сначала сгенерируйте iframe.'); return; }
+  navigator.clipboard.writeText(out.value);
 }
 
-// === Привязка кнопок к действиям ===
-document.getElementById('saveBtn')?.addEventListener('click', e => { e.preventDefault(); publish(); });
+document.getElementById('saveBtn')?.addEventListener('click', publish);
 document.getElementById('testBtn')?.addEventListener('click', quickTest);
 document.getElementById('copyBtn')?.addEventListener('click', copyIframe);
 </script>
+
 </body>
 </html>
