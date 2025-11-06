@@ -640,7 +640,7 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
       finalText:     get('#finalText','').trim(),
       roundTimerSec: parseInt(get('#roundTime','0'), 10) || 0,
 
-
+<script>
   // === Валидация конфигурации ===
   function validateConfig(cfg){
     if (!cfg.questions.length) return 'Добавьте хотя бы один вопрос.';
@@ -653,7 +653,8 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
     }
     return null;
   }
-
+<script>
+      
 // === Константы для публикации ===
 const ENDPOINT    = "https://server-kjnn.onrender.com/publish";          
 const PUBLISH_KEY = "nika_read_pub_2025";  
