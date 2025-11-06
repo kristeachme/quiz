@@ -641,7 +641,6 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
       roundTimerSec: parseInt(get('#roundTime','0'), 10) || 0,
 
 <script>
-  // === Валидация конфигурации ===
   function validateConfig(cfg){
     if (!cfg.questions.length) return 'Добавьте хотя бы один вопрос.';
     for (let i = 0; i < cfg.questions.length; i++){
@@ -653,7 +652,7 @@ textarea#iframeOut{height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,Co
     }
     return null;
   }
-<script>
+ <script>
       
 // === Константы для публикации ===
 const ENDPOINT    = "https://server-kjnn.onrender.com/publish";          
